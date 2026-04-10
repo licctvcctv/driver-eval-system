@@ -146,8 +146,12 @@ const openReview = (row) => {
 const handleReview = async () => {
   try {
     await reviewComplaint({ ...reviewForm })
-    ElMessage.success('审核成功')
     reviewVisible.value = false
+    if (reviewForm.status === 1) {
+      ElMessage.success('投诉已通过，该司机本周投诉次数+1。累计5次将自动处罚下线3天。')
+    } else {
+      ElMessage.success('审核成功')
+    }
     loadData()
   } catch (e) {
     ElMessage.error('审核失败')
