@@ -1,7 +1,9 @@
-* {
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+body, h1, h2, h3, h4, h5, h6, p, ul, ol {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
 body {
@@ -119,14 +121,13 @@ body {
 
 /* Cards */
 .el-card {
-  border-radius: 10px !important;
-  border: none !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
 .el-card:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Tables */

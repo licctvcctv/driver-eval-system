@@ -22,6 +22,7 @@
                 :trigger-on-focus="true"
                 style="width: 100%"
                 @select="handleSelectDeparture"
+                @input="handleDepartureInput"
               >
                 <template #prefix>
                   <span class="dot dot--green"></span>
@@ -44,6 +45,7 @@
                 :trigger-on-focus="true"
                 style="width: 100%"
                 @select="handleSelectDestination"
+                @input="handleDestinationInput"
               >
                 <template #prefix>
                   <span class="dot dot--red"></span>
@@ -235,11 +237,20 @@ const handleSelectDeparture = (loc) => {
   form.departureLat = String(loc.lat)
   form.departureLng = String(loc.lng)
 }
+// 用户手动改出发地文本时清除坐标，强制重新选择
+const handleDepartureInput = () => {
+  form.departureLat = ''
+  form.departureLng = ''
+}
 
 const handleSelectDestination = (loc) => {
   form.destination = loc.name
   form.destLat = String(loc.lat)
   form.destLng = String(loc.lng)
+}
+const handleDestinationInput = () => {
+  form.destLat = ''
+  form.destLng = ''
 }
 
 const estimatedDistance = computed(() => {
