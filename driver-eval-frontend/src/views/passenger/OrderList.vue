@@ -21,7 +21,7 @@
                 :type="levelTagType(row.driverLevel)"
                 size="small"
                 style="margin-left: 6px"
-              >{{ row.driverLevel }}</el-tag>
+              >{{ levelText(row.driverLevel) }}</el-tag>
               <div v-if="row.driverScore" style="margin-top: 4px">
                 <el-rate :model-value="row.driverScore" disabled show-score score-template="{value}" size="small" />
               </div>
@@ -103,9 +103,16 @@ const statusTagType = (status) => {
 }
 
 const levelTagType = (level) => {
-  if (level === '金牌') return 'warning'
-  if (level === '银牌') return ''
+  if (level === 3 || level === '金牌') return 'warning'
+  if (level === 2 || level === '银牌') return ''
   return 'info'
+}
+
+const levelText = (level) => {
+  if (level === 3) return '金牌司机'
+  if (level === 2) return '银牌司机'
+  if (level === 1) return '普通司机'
+  return level  // fallback for string values
 }
 
 const loadOrders = async () => {

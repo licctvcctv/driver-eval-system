@@ -32,7 +32,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/swagger**",
                         "/webjars/**",
                         "/v2/**",
-                        "/uploads/**"
+                        "/uploads/**",
+                        "/api/common/upload"
                 );
     }
 

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drivereval.mapper.OrderInfoMapper">
+
+    <select id="selectOrderWithDetails" resultType="java.util.Map">
+        SELECT o.*,
+               su_p.real_name AS passenger_name,
+               su_p.phone AS passenger_phone,
+               su_d.real_name AS driver_name,
+               su_d.phone AS driver_phone,
+               v.plate_number,
+               v.brand AS vehicle_brand,
+               v.model AS vehicle_model,
+               v.color AS vehicle_color,
+               di.score AS current_driver_score,
+               di.level AS current_driver_level,
+               di.online_status
+        FROM order_info o
+        LEFT JOIN sys_user su_p ON o.passenger_id = su_p.id
+        LEFT JOIN sys_user su_d ON o.driver_id = su_d.id
+        LEFT JOIN vehicle_info v ON o.driver_id = v.driver_id AND v.is_deleted = 0
+        LEFT JOIN driver_info di ON o.driver_id = di.user_id
+        WHERE 1=1
+        <if test="passengerId != null">
+            AND o.passenger_id = #{passengerId}
+        </if>
+        <if test="driverId != null">
+            AND o.driver_id = #{driverId}
+        </if>
+        <if test="status != null">
+            AND o.status = #{status}
+        </if>
+        <if test="statusList != null">
+            AND o.status IN
+            <foreach collection="statusList" item="s" open="(" separator="," close=")">
+                #{s}
+            </foreach>
+        </if>
+        ORDER BY o.create_time DESC
+    </select>
+
+</mapper>

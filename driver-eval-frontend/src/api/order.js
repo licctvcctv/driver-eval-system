@@ -31,3 +31,7 @@ export function getDriverCancelledOrders(params) {
 export function getAllOrders(params) {
   return request({ url: '/order/all', method: 'get', params })
 }
+
+export function evaluatePassenger(data) {
+  return request({ url: '/driver/order/evaluate-passenger', method: 'post', data })
+}

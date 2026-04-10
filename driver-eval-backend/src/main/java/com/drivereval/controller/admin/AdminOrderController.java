@@ -1,15 +1,14 @@
 package com.drivereval.controller.admin;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.drivereval.common.Result;
-import com.drivereval.entity.OrderInfo;
 import com.drivereval.mapper.OrderInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/order")
@@ -25,14 +24,7 @@ public class AdminOrderController extends BaseController {
             @RequestParam(defaultValue = "10") Integer pageSize,
             HttpServletRequest request) {
 
-        Page<OrderInfo> page = new Page<>(pageNum, pageSize);
-        QueryWrapper<OrderInfo> wrapper = new QueryWrapper<OrderInfo>()
-                .orderByDesc("create_time");
-
-        if (status != null) {
-            wrapper.eq("status", status);
-        }
-
-        return Result.success(orderInfoMapper.selectPage(page, wrapper));
+        Page<Map<String, Object>> page = new Page<>(pageNum, pageSize);
+        return Result.success(orderInfoMapper.selectOrderWithDetails(page, null, null, status, null));
     }
 }

@@ -79,6 +79,9 @@ public class AuthController {
         String phone = params.get("phone");
         String roleStr = params.get("role");
         String idCardImg = params.get("idCardImg");
+        if (idCardImg == null) {
+            idCardImg = params.get("idCardImage");
+        }
 
         if (username == null || password == null || roleStr == null) {
             return Result.error("用户名、密码和角色不能为空");
@@ -92,11 +95,18 @@ public class AuthController {
             return Result.error("密码长度必须在6-50个字符之间");
         }
 
+        // 支持字符串角色名和数字角色
         int role;
-        try {
-            role = Integer.parseInt(roleStr);
-        } catch (NumberFormatException e) {
-            return Result.error("角色参数格式错误");
+        if ("PASSENGER".equalsIgnoreCase(roleStr)) {
+            role = Constants.ROLE_PASSENGER;
+        } else if ("DRIVER".equalsIgnoreCase(roleStr)) {
+            role = Constants.ROLE_DRIVER;
+        } else {
+            try {
+                role = Integer.parseInt(roleStr);
+            } catch (NumberFormatException e) {
+                return Result.error("角色参数格式错误");
+            }
         }
 
         // 仅允许乘客或司机注册，禁止管理员注册

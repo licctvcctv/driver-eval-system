@@ -9,12 +9,12 @@ import com.drivereval.entity.EvaluationTagRelation;
 import com.drivereval.mapper.EvalTagMapper;
 import com.drivereval.mapper.EvaluationMapper;
 import com.drivereval.mapper.EvaluationTagRelationMapper;
+import com.drivereval.service.EvaluationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,6 +31,9 @@ public class DriverEvalController extends BaseController {
     @Autowired
     private EvalTagMapper evalTagMapper;
 
+    @Autowired
+    private EvaluationService evaluationService;
+
     @GetMapping("/list")
     public Result<?> getPassengerEvaluations(
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -39,35 +42,16 @@ public class DriverEvalController extends BaseController {
         Long userId = getUserId(request);
 
         Page<Evaluation> page = new Page<>(pageNum, pageSize);
-        QueryWrapper<Evaluation> wrapper = new QueryWrapper<Evaluation>()
-                .eq("driver_id", userId)
-                .orderByDesc("create_time");
-
-        return Result.success(evaluationMapper.selectPage(page, wrapper));
+        return Result.success(evaluationService.getDriverEvaluations(userId, page));
     }
 
     @PostMapping("/reply")
     public Result<?> reply(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         Long userId = getUserId(request);
-
         Long evaluationId = Long.valueOf(params.get("evaluationId").toString());
         String content = (String) params.get("content");
 
-        Evaluation evaluation = evaluationMapper.selectById(evaluationId);
-        if (evaluation == null) {
-            return Result.error("评价不存在");
-        }
-        if (!evaluation.getDriverId().equals(userId)) {
-            return Result.error("无权回复此评价");
-        }
-        if (evaluation.getDriverReply() != null && !evaluation.getDriverReply().isEmpty()) {
-            return Result.error("已回复过此评价");
-        }
-
-        evaluation.setDriverReply(content);
-        evaluation.setReplyTime(LocalDateTime.now());
-        evaluationMapper.updateById(evaluation);
-
+        evaluationService.driverReply(evaluationId, userId, content);
         return Result.success("回复成功");
     }
 

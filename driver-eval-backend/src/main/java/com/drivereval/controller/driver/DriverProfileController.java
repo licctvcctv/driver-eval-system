@@ -1,6 +1,7 @@
 package com.drivereval.controller.driver;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.DriverInfo;
 import com.drivereval.entity.SysUser;
@@ -75,7 +76,7 @@ public class DriverProfileController extends BaseController {
         double lat = 39.9 + (random.nextDouble() - 0.5) * 0.2;
         double lng = 116.4 + (random.nextDouble() - 0.5) * 0.2;
 
-        driverInfo.setOnlineStatus(1);
+        driverInfo.setOnlineStatus(Constants.ONLINE);
         driverInfo.setLatitude(new BigDecimal(String.format("%.6f", lat)));
         driverInfo.setLongitude(new BigDecimal(String.format("%.6f", lng)));
         driverInfoMapper.updateById(driverInfo);
@@ -93,7 +94,7 @@ public class DriverProfileController extends BaseController {
             return Result.error("司机信息不存在");
         }
 
-        driverInfo.setOnlineStatus(0);
+        driverInfo.setOnlineStatus(Constants.OFFLINE);
         driverInfoMapper.updateById(driverInfo);
 
         return Result.success("下线成功");

@@ -61,15 +61,18 @@ async function handleLogin() {
     const res = await login(form)
     const data = res.data || res
     setToken(data.token)
+    const user = data.user || data
     setUserInfo({
-      id: data.id,
-      username: data.username,
-      realName: data.realName,
-      role: data.role || form.role,
-      phone: data.phone
+      id: user.id,
+      username: user.username,
+      realName: user.realName,
+      role: user.role || form.role,
+      phone: user.phone
     })
     ElMessage.success('登录成功')
-    router.push(roleHomeMap[data.role || form.role])
+    const roleMap = { 1: 'PASSENGER', 2: 'DRIVER', 3: 'ADMIN' }
+    const roleKey = roleMap[user.role] || form.role
+    router.push(roleHomeMap[roleKey])
   } catch (e) {
     // handled by interceptor
   } finally {

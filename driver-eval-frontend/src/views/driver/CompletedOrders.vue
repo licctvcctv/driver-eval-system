@@ -20,6 +20,19 @@
           </template>
         </el-table-column>
         <el-table-column prop="completeTime" label="完成时间" width="170" />
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              v-if="!row.driverEvaluated"
+              type="primary"
+              size="small"
+              @click="openEvalDialog(row)"
+            >
+              评价乘客
+            </el-button>
+            <el-tag v-else type="success" size="small">已评价</el-tag>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div class="pagination-wrapper">
@@ -34,17 +47,45 @@
         />
       </div>
     </el-card>
+
+    <!-- 评价乘客对话框 -->
+    <el-dialog v-model="evalDialogVisible" title="评价乘客" width="500px">
+      <el-form :model="evalForm" label-width="80px">
+        <el-form-item label="订单号">
+          <span>{{ evalForm.orderNo }}</span>
+        </el-form-item>
+        <el-form-item label="评价内容">
+          <el-input
+            v-model="evalForm.content"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入对乘客的评价"
+            maxlength="500"
+            show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="evalDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleEvaluate" :loading="evalLoading">提交评价</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getDriverCompletedOrders } from '@/api/order'
+import { ElMessage } from 'element-plus'
+import { getDriverCompletedOrders, evaluatePassenger } from '@/api/order'
 
 const orderList = ref([])
 const loading = ref(false)
 const total = ref(0)
 const queryParams = ref({ page: 1, size: 10 })
+
+const evalDialogVisible = ref(false)
+const evalLoading = ref(false)
+const evalForm = ref({ orderId: null, orderNo: '', content: '' })
 
 async function fetchOrders() {
   loading.value = true
@@ -57,6 +98,29 @@ async function fetchOrders() {
     console.error(e)
   } finally {
     loading.value = false
+  }
+}
+
+function openEvalDialog(row) {
+  evalForm.value = { orderId: row.id, orderNo: row.orderNo, content: '' }
+  evalDialogVisible.value = true
+}
+
+async function handleEvaluate() {
+  if (!evalForm.value.content.trim()) {
+    ElMessage.warning('请输入评价内容')
+    return
+  }
+  evalLoading.value = true
+  try {
+    await evaluatePassenger({ orderId: evalForm.value.orderId, content: evalForm.value.content })
+    ElMessage.success('评价成功')
+    evalDialogVisible.value = false
+    await fetchOrders()
+  } catch (e) {
+    ElMessage.error(e.message || '评价失败')
+  } finally {
+    evalLoading.value = false
   }
 }
 

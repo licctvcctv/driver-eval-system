@@ -201,6 +201,17 @@ CREATE TABLE driver_score_log (
   create_time   DATETIME     DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='司机评分变更日志';
 
+-- 15. 司机评价乘客表
+CREATE TABLE driver_evaluation (
+  id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+  order_id     BIGINT       NOT NULL UNIQUE,
+  driver_id    BIGINT       NOT NULL,
+  passenger_id BIGINT       NOT NULL,
+  content      VARCHAR(500) DEFAULT '',
+  create_time  DATETIME     DEFAULT CURRENT_TIMESTAMP,
+  update_time  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='司机评价乘客';
+
 -- ==================== 种子数据 ====================
 
 -- 管理员账号 (密码: admin123)

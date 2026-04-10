@@ -62,20 +62,20 @@
           <span class="status-text">{{ statusText }}</span>
         </div>
         <div class="status-actions">
-          <el-button-group v-if="profile.status !== 3">
+          <el-button-group v-if="profile.onlineStatus !== 2">
             <el-button
-              :type="profile.status === 1 ? 'success' : 'default'"
+              :type="profile.onlineStatus === 1 ? 'success' : 'default'"
               @click="handleGoOnline"
               :loading="statusLoading"
-              :disabled="profile.status === 1"
+              :disabled="profile.onlineStatus === 1"
             >
               上线
             </el-button>
             <el-button
-              :type="profile.status === 0 ? 'info' : 'default'"
+              :type="profile.onlineStatus === 0 ? 'info' : 'default'"
               @click="handleGoOffline"
               :loading="statusLoading"
-              :disabled="profile.status === 0"
+              :disabled="profile.onlineStatus === 0"
             >
               离线
             </el-button>
@@ -84,7 +84,7 @@
             处罚中 - 无法切换状态
           </el-button>
         </div>
-        <div v-if="profile.status === 3 && profile.punishEndTime" class="punish-info">
+        <div v-if="profile.onlineStatus === 2 && profile.punishEndTime" class="punish-info">
           <el-alert type="error" :closable="false" show-icon>
             处罚结束时间：{{ profile.punishEndTime }}
             <span v-if="punishCountdown">（剩余 {{ punishCountdown }}）</span>
@@ -148,35 +148,35 @@ const scoreColor = computed(() => {
 
 const levelText = computed(() => {
   const level = profile.value.level
-  if (level === 1) return '金牌司机'
+  if (level === 3) return '金牌司机'
   if (level === 2) return '银牌司机'
   return '普通司机'
 })
 
 const levelTagType = computed(() => {
   const level = profile.value.level
-  if (level === 1) return 'warning'
+  if (level === 3) return 'warning'
   if (level === 2) return ''
   return 'info'
 })
 
 const statusText = computed(() => {
-  const s = profile.value.status
+  const s = profile.value.onlineStatus
   if (s === 1) return '在线'
-  if (s === 3) return '处罚中'
+  if (s === 2) return '处罚中'
   return '离线'
 })
 
 const statusDotColor = computed(() => {
-  const s = profile.value.status
+  const s = profile.value.onlineStatus
   if (s === 1) return '#67c23a'
-  if (s === 3) return '#f56c6c'
+  if (s === 2) return '#f56c6c'
   return '#909399'
 })
 
 function startPunishCountdown() {
   if (countdownTimer) clearInterval(countdownTimer)
-  if (profile.value.status !== 3 || !profile.value.punishEndTime) return
+  if (profile.value.onlineStatus !== 2 || !profile.value.punishEndTime) return
   countdownTimer = setInterval(() => {
     const end = new Date(profile.value.punishEndTime).getTime()
     const now = Date.now()

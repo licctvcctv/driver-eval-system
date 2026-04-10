@@ -16,7 +16,7 @@
                 :type="levelTagType(row.driverLevel)"
                 size="small"
                 style="margin-left: 6px"
-              >{{ row.driverLevel }}</el-tag>
+              >{{ levelText(row.driverLevel) }}</el-tag>
             </div>
             <span v-else style="color: #909399">-</span>
           </template>
@@ -181,9 +181,16 @@ const complaintForm = reactive({
 })
 
 const levelTagType = (level) => {
-  if (level === '金牌') return 'warning'
-  if (level === '银牌') return ''
+  if (level === 3 || level === '金牌') return 'warning'
+  if (level === 2 || level === '银牌') return ''
   return 'info'
+}
+
+const levelText = (level) => {
+  if (level === 3) return '金牌司机'
+  if (level === 2) return '银牌司机'
+  if (level === 1) return '普通司机'
+  return level  // fallback for string values
 }
 
 const loadOrders = async () => {

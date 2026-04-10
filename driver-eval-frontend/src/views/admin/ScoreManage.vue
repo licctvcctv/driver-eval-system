@@ -32,7 +32,7 @@
       </el-table-column>
       <el-table-column prop="level" label="等级" width="100">
         <template #default="{ row }">
-          <el-tag :type="levelType(row.level)">{{ row.level }}</el-tag>
+          <el-tag :type="levelType(row.level)">{{ levelLabel(row.level) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="totalOrders" label="总订单数" width="100" />
@@ -100,9 +100,16 @@ const scoreColor = (s) => {
 }
 
 const levelType = (l) => {
-  if (l === '金牌') return 'warning'
-  if (l === '银牌') return ''
+  if (l === 3 || l === '金牌') return 'warning'
+  if (l === 2 || l === '银牌') return ''
   return 'info'
+}
+
+const levelLabel = (l) => {
+  if (l === 3) return '金牌'
+  if (l === 2) return '银牌'
+  if (l === 1) return '普通'
+  return l  // fallback for string values
 }
 
 const loadData = async () => {
