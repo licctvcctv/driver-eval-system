@@ -10,7 +10,7 @@
       <el-table-column prop="tagName" label="标签名称" />
       <el-table-column prop="tagType" label="标签类型" width="120">
         <template #default="{ row }">
-          <el-tag :type="row.tagType === '好评' ? 'success' : 'danger'">{{ row.tagType }}</el-tag>
+          <el-tag :type="tagTypeStyle(row.tagType)">{{ tagTypeLabel(row.tagType) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="count" label="使用次数" width="120" sortable />
@@ -26,6 +26,26 @@ import { getAllTagStats } from '@/api/evaluation'
 const chartRef = ref(null)
 const tableData = ref([])
 let chartInstance = null
+
+const tagTypeLabel = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return '好评'
+  if (value === 2 || tagType === '差评') return '差评'
+  return tagType || '-'
+}
+
+const tagTypeStyle = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return 'success'
+  return 'danger'
+}
+
+const normalizeTagType = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return 1
+  if (value === 2 || tagType === '差评') return 2
+  return 2
+}
 
 const loadData = async () => {
   try {
@@ -49,7 +69,7 @@ const renderChart = (data) => {
 
   const names = data.map(d => d.tagName)
   const counts = data.map(d => d.count)
-  const colors = data.map(d => d.tagType === '好评' ? '#67C23A' : '#F56C6C')
+  const colors = data.map(d => normalizeTagType(d.tagType) === 1 ? '#67C23A' : '#F56C6C')
 
   chartInstance.setOption({
     title: { text: '标签使用统计', left: 'center' },

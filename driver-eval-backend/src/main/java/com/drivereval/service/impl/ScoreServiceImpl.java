@@ -39,7 +39,9 @@ public class ScoreServiceImpl implements ScoreService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void recalculateScore(Long driverId) {
-        DriverInfo driverInfo = driverInfoMapper.selectById(driverId);
+        DriverInfo driverInfo = driverInfoMapper.selectOne(
+                new LambdaQueryWrapper<DriverInfo>()
+                        .eq(DriverInfo::getUserId, driverId));
         if (driverInfo == null) {
             throw new BusinessException("司机信息不存在");
         }

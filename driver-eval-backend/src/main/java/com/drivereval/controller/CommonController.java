@@ -12,6 +12,7 @@ import com.drivereval.mapper.EvalTagMapper;
 import com.drivereval.mapper.SensitiveWordMapper;
 import com.drivereval.mapper.VehicleTypeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,6 +39,9 @@ public class CommonController extends BaseController {
     @Autowired
     private EvalTagMapper evalTagMapper;
 
+    @Value("${file.upload-path}")
+    private String uploadPath;
+
     @PostMapping("/upload")
     public Result<?> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
         if (file.isEmpty()) {
@@ -51,15 +55,13 @@ public class CommonController extends BaseController {
         }
 
         String newFilename = UUID.randomUUID().toString().replace("-", "") + suffix;
-        String uploadDir = System.getProperty("user.dir") + "/uploads/";
-
-        File dir = new File(uploadDir);
+        File dir = new File(uploadPath);
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
         try {
-            file.transferTo(new File(uploadDir + newFilename));
+            file.transferTo(new File(dir, newFilename));
         } catch (IOException e) {
             return Result.error("文件上传失败: " + e.getMessage());
         }
@@ -90,15 +92,37 @@ public class CommonController extends BaseController {
 
     @GetMapping("/vehicle-types")
     public Result<?> vehicleTypes(HttpServletRequest request) {
-        return Result.success(vehicleTypeMapper.selectList(
-                new QueryWrapper<VehicleType>().orderByAsc("id")));
+        List<VehicleType> types = vehicleTypeMapper.selectList(new QueryWrapper<VehicleType>().orderByAsc("id"));
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (VehicleType type : types) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", type.getId());
+            item.put("typeName", type.getTypeName());
+            item.put("name", type.getTypeName());
+            item.put("description", type.getDescription());
+            item.put("createTime", type.getCreateTime());
+            item.put("updateTime", type.getUpdateTime());
+            result.add(item);
+        }
+        return Result.success(result);
     }
 
     @GetMapping("/tags")
     public Result<?> getTagList() {
         List<EvalTag> tags = evalTagMapper.selectList(
             new QueryWrapper<EvalTag>().eq("is_deleted", 0).orderByAsc("sort_order"));
-        return Result.success(tags);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (EvalTag tag : tags) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", tag.getId());
+            item.put("name", tag.getTagName());
+            item.put("tagName", tag.getTagName());
+            item.put("tagType", tag.getTagType());
+            item.put("tagTypeLabel", tag.getTagType() != null && tag.getTagType() == 1 ? "好评" : "差评");
+            item.put("sortOrder", tag.getSortOrder());
+            result.add(item);
+        }
+        return Result.success(result);
     }
 
     @PostMapping("/check-sensitive")

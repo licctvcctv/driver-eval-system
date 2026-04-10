@@ -11,7 +11,9 @@
       <el-table-column prop="dispatchScore" label="派单评分" width="100" />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="orderStatusType(row.status)">{{ row.status }}</el-tag>
+          <el-tag :type="orderStatusType(row)">
+            {{ orderStatusText(row) }}
+          </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="180" />
@@ -39,9 +41,17 @@ const tableData = ref([])
 const total = ref(0)
 const query = reactive({ pageNum: 1, pageSize: 10 })
 
-const orderStatusType = (s) => {
-  const map = { '待接单': 'warning', '已接单': '', '进行中': 'primary', '已完成': 'success', '已取消': 'info' }
-  return map[s] || ''
+const orderStatusText = (row) => row.statusText || row.status || '-'
+
+const orderStatusType = (row) => {
+  const status = row?.statusCode ?? row?.status
+  const value = Number(status)
+  if (value === 0 || status === '待接单') return 'warning'
+  if (value === 1 || status === '已接单') return ''
+  if (value === 2 || value === 3 || status === '进行中') return 'primary'
+  if (value === 4 || status === '已完成') return 'success'
+  if (value === 5 || value === 6 || status === '乘客取消' || status === '司机取消' || status === '已取消') return 'info'
+  return ''
 }
 
 const loadData = async () => {

@@ -9,7 +9,7 @@
       <el-table-column prop="tagName" label="标签名称" />
       <el-table-column prop="tagType" label="标签类型" width="120">
         <template #default="{ row }">
-          <el-tag :type="row.tagType === '好评' ? 'success' : 'danger'">{{ row.tagType }}</el-tag>
+          <el-tag :type="tagTypeStyle(row.tagType)">{{ tagTypeLabel(row.tagType) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="sortOrder" label="排序" width="80" />
@@ -28,8 +28,8 @@
         </el-form-item>
         <el-form-item label="标签类型">
           <el-radio-group v-model="form.tagType">
-            <el-radio label="好评">好评</el-radio>
-            <el-radio label="差评">差评</el-radio>
+            <el-radio :label="1">好评</el-radio>
+            <el-radio :label="2">差评</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="排序">
@@ -52,7 +52,27 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 const loading = ref(false)
 const tableData = ref([])
 const dialogVisible = ref(false)
-const form = reactive({ id: null, tagName: '', tagType: '好评', sortOrder: 0 })
+const form = reactive({ id: null, tagName: '', tagType: 1, sortOrder: 0 })
+
+const tagTypeLabel = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return '好评'
+  if (value === 2 || tagType === '差评') return '差评'
+  return tagType || '-'
+}
+
+const tagTypeStyle = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return 'success'
+  return 'danger'
+}
+
+const normalizeTagType = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return 1
+  if (value === 2 || tagType === '差评') return 2
+  return 1
+}
 
 const loadData = async () => {
   loading.value = true
@@ -68,9 +88,9 @@ const loadData = async () => {
 
 const openDialog = (row) => {
   if (row) {
-    Object.assign(form, { id: row.id, tagName: row.tagName, tagType: row.tagType, sortOrder: row.sortOrder })
+    Object.assign(form, { id: row.id, tagName: row.tagName, tagType: normalizeTagType(row.tagType), sortOrder: row.sortOrder })
   } else {
-    Object.assign(form, { id: null, tagName: '', tagType: '好评', sortOrder: 0 })
+    Object.assign(form, { id: null, tagName: '', tagType: 1, sortOrder: 0 })
   }
   dialogVisible.value = true
 }

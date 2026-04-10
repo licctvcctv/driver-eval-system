@@ -17,8 +17,8 @@
         <el-table-column prop="tagName" label="标签名称" />
         <el-table-column label="标签类型" width="120">
           <template #default="{ row }">
-            <el-tag :type="row.tagType === 1 ? 'success' : 'danger'">
-              {{ row.tagType === 1 ? '好评' : '差评' }}
+            <el-tag :type="tagTypeStyle(row.tagType)">
+              {{ tagTypeLabel(row.tagType) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -37,6 +37,26 @@ const tagList = ref([])
 const loading = ref(false)
 const chartRef = ref(null)
 let chartInstance = null
+
+const tagTypeLabel = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return '好评'
+  if (value === 2 || tagType === '差评') return '差评'
+  return tagType || '-'
+}
+
+const tagTypeStyle = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return 'success'
+  return 'danger'
+}
+
+const normalizeTagType = (tagType) => {
+  const value = Number(tagType)
+  if (value === 1 || tagType === '好评') return 1
+  if (value === 2 || tagType === '差评') return 2
+  return 2
+}
 
 async function fetchTagStats() {
   loading.value = true
@@ -62,7 +82,7 @@ function renderChart() {
   const names = tagList.value.map(item => item.tagName)
   const counts = tagList.value.map(item => item.count)
   const colors = tagList.value.map(item =>
-    item.tagType === 1 ? '#67c23a' : '#f56c6c'
+    normalizeTagType(item.tagType) === 1 ? '#67c23a' : '#f56c6c'
   )
 
   const option = {

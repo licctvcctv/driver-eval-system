@@ -2,24 +2,74 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.drivereval.mapper.OrderInfoMapper">
 
+    <sql id="OrderDetailColumns">
+        o.id AS id,
+        o.order_no AS orderNo,
+        o.passenger_id AS passengerId,
+        o.driver_id AS driverId,
+        o.vehicle_id AS vehicleId,
+        o.departure AS departure,
+        o.departure_lng AS departureLng,
+        o.departure_lat AS departureLat,
+        o.destination AS destination,
+        o.dest_lng AS destLng,
+        o.dest_lat AS destLat,
+        o.distance AS distance,
+        o.price AS price,
+        o.dispatch_score AS dispatchScore,
+        o.status AS status,
+        CASE o.status
+            WHEN 0 THEN '待接单'
+            WHEN 1 THEN '已接单'
+            WHEN 2 THEN '进行中'
+            WHEN 3 THEN '进行中'
+            WHEN 4 THEN '已完成'
+            WHEN 5 THEN '乘客取消'
+            WHEN 6 THEN '司机取消'
+            ELSE '未知'
+            END AS statusText,
+        COALESCE(o.driver_score, di.score) AS driverScore,
+        COALESCE(o.driver_level, di.level) AS driverLevel,
+        CASE COALESCE(o.driver_level, di.level)
+            WHEN 3 THEN '金牌'
+            WHEN 2 THEN '银牌'
+            WHEN 1 THEN '普通'
+            ELSE '普通'
+            END AS driverLevelText,
+        o.complete_time AS completeTime,
+        o.cancel_time AS cancelTime,
+        o.cancel_reason AS cancelReason,
+        o.is_evaluated AS isEvaluated,
+        o.is_complained AS isComplained,
+        CASE WHEN de.id IS NULL THEN 0 ELSE 1 END AS driverEvaluated,
+        o.create_time AS createTime,
+        o.update_time AS updateTime,
+        su_p.real_name AS passengerName,
+        su_p.phone AS passengerPhone,
+        su_d.real_name AS driverName,
+        su_d.phone AS driverPhone,
+        v.plate_number AS plateNumber,
+        v.brand AS vehicleBrand,
+        v.model AS vehicleModel,
+        v.color AS vehicleColor,
+        CONCAT_WS(' ', NULLIF(v.brand, ''), NULLIF(v.model, ''), NULLIF(v.color, '')) AS vehicleInfo,
+        di.online_status AS onlineStatus,
+        CASE di.online_status
+            WHEN 1 THEN '在线'
+            WHEN 2 THEN '处罚中'
+            ELSE '离线'
+            END AS onlineStatusText
+    </sql>
+
     <select id="selectOrderWithDetails" resultType="java.util.Map">
-        SELECT o.*,
-               su_p.real_name AS passenger_name,
-               su_p.phone AS passenger_phone,
-               su_d.real_name AS driver_name,
-               su_d.phone AS driver_phone,
-               v.plate_number,
-               v.brand AS vehicle_brand,
-               v.model AS vehicle_model,
-               v.color AS vehicle_color,
-               di.score AS current_driver_score,
-               di.level AS current_driver_level,
-               di.online_status
+        SELECT
+        <include refid="OrderDetailColumns" />
         FROM order_info o
         LEFT JOIN sys_user su_p ON o.passenger_id = su_p.id
         LEFT JOIN sys_user su_d ON o.driver_id = su_d.id
-        LEFT JOIN vehicle_info v ON o.driver_id = v.driver_id AND v.is_deleted = 0
+        LEFT JOIN vehicle_info v ON o.vehicle_id = v.id AND v.is_deleted = 0
         LEFT JOIN driver_info di ON o.driver_id = di.user_id
+        LEFT JOIN driver_evaluation de ON o.id = de.order_id
         WHERE 1=1
         <if test="passengerId != null">
             AND o.passenger_id = #{passengerId}
@@ -37,6 +87,34 @@
             </foreach>
         </if>
         ORDER BY o.create_time DESC
+    </select>
+
+    <select id="selectOrderDetailById" resultType="java.util.Map">
+        SELECT
+        <include refid="OrderDetailColumns" />
+        FROM order_info o
+        LEFT JOIN sys_user su_p ON o.passenger_id = su_p.id
+        LEFT JOIN sys_user su_d ON o.driver_id = su_d.id
+        LEFT JOIN vehicle_info v ON o.vehicle_id = v.id AND v.is_deleted = 0
+        LEFT JOIN driver_info di ON o.driver_id = di.user_id
+        LEFT JOIN driver_evaluation de ON o.id = de.order_id
+        WHERE o.id = #{orderId}
+        LIMIT 1
+    </select>
+
+    <select id="selectOrderDetailsByIds" resultType="java.util.Map">
+        SELECT
+        <include refid="OrderDetailColumns" />
+        FROM order_info o
+        LEFT JOIN sys_user su_p ON o.passenger_id = su_p.id
+        LEFT JOIN sys_user su_d ON o.driver_id = su_d.id
+        LEFT JOIN vehicle_info v ON o.vehicle_id = v.id AND v.is_deleted = 0
+        LEFT JOIN driver_info di ON o.driver_id = di.user_id
+        LEFT JOIN driver_evaluation de ON o.id = de.order_id
+        WHERE o.id IN
+        <foreach collection="orderIds" item="oid" open="(" separator="," close=")">
+            #{oid}
+        </foreach>
     </select>
 
 </mapper>

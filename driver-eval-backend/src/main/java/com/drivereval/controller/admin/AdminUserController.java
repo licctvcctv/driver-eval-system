@@ -21,7 +21,7 @@ public class AdminUserController extends BaseController {
 
     @GetMapping("/list")
     public Result<?> pageList(
-            @RequestParam(required = false) Integer role,
+            @RequestParam(required = false) String role,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -31,8 +31,9 @@ public class AdminUserController extends BaseController {
         QueryWrapper<SysUser> wrapper = new QueryWrapper<SysUser>()
                 .orderByDesc("create_time");
 
-        if (role != null) {
-            wrapper.eq("role", role);
+        Integer roleCode = parseRole(role);
+        if (roleCode != null) {
+            wrapper.eq("role", roleCode);
         }
         if (keyword != null && !keyword.isEmpty()) {
             wrapper.and(w -> w.like("username", keyword)
@@ -40,13 +41,45 @@ public class AdminUserController extends BaseController {
                     .or().like("phone", keyword));
         }
 
-        return Result.success(sysUserMapper.selectPage(page, wrapper));
+        Page<SysUser> pageData = sysUserMapper.selectPage(page, wrapper);
+        java.util.List<Map<String, Object>> records = new java.util.ArrayList<>();
+        for (SysUser user : pageData.getRecords()) {
+            Map<String, Object> item = new java.util.HashMap<>();
+            item.put("id", user.getId());
+            item.put("username", user.getUsername());
+            item.put("realName", user.getRealName());
+            item.put("phone", user.getPhone());
+            item.put("avatar", user.getAvatar());
+            item.put("roleCode", user.getRole());
+            item.put("role", roleText(user.getRole()));
+            item.put("statusCode", user.getStatus());
+            item.put("status", statusText(user.getStatus()));
+            item.put("idCardImg", user.getIdCardImg());
+            item.put("createTime", user.getCreateTime());
+            item.put("updateTime", user.getUpdateTime());
+            records.add(item);
+        }
+
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("records", records);
+        data.put("total", pageData.getTotal());
+        data.put("current", pageData.getCurrent());
+        data.put("size", pageData.getSize());
+        data.put("pages", pageData.getPages());
+        return Result.success(data);
     }
 
     @PostMapping("/toggle-status")
     public Result<?> toggleStatus(@RequestBody Map<String, Object> params, HttpServletRequest request) {
-        Long userId = Long.valueOf(params.get("userId").toString());
-        Integer status = Integer.valueOf(params.get("status").toString());
+        Object userIdObj = params.get("userId") != null ? params.get("userId") : params.get("id");
+        if (userIdObj == null) {
+            return Result.error("用户ID不能为空");
+        }
+        Long userId = Long.valueOf(userIdObj.toString());
+        Integer status = parseStatus(params.get("status"));
+        if (status == null) {
+            return Result.error("状态值不合法");
+        }
 
         SysUser user = sysUserMapper.selectById(userId);
         if (user == null) {
@@ -57,5 +90,82 @@ public class AdminUserController extends BaseController {
         sysUserMapper.updateById(user);
 
         return Result.success("操作成功");
+    }
+
+    private Integer parseRole(String role) {
+        if (role == null || role.trim().isEmpty()) {
+            return null;
+        }
+        String value = role.trim();
+        if ("乘客".equals(value) || "PASSENGER".equalsIgnoreCase(value)) {
+            return 1;
+        }
+        if ("司机".equals(value) || "DRIVER".equalsIgnoreCase(value)) {
+            return 2;
+        }
+        if ("管理员".equals(value) || "ADMIN".equalsIgnoreCase(value)) {
+            return 3;
+        }
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private Integer parseStatus(Object status) {
+        if (status == null) {
+            return null;
+        }
+        String value = status.toString().trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+        if ("正常".equals(value)) {
+            return 1;
+        }
+        if ("禁用".equals(value)) {
+            return 0;
+        }
+        if ("处罚中".equals(value)) {
+            return 2;
+        }
+        try {
+            return Integer.valueOf(value);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private String roleText(Integer role) {
+        if (role == null) {
+            return "未知";
+        }
+        switch (role) {
+            case 1:
+                return "乘客";
+            case 2:
+                return "司机";
+            case 3:
+                return "管理员";
+            default:
+                return "未知";
+        }
+    }
+
+    private String statusText(Integer status) {
+        if (status == null) {
+            return "未知";
+        }
+        switch (status) {
+            case 1:
+                return "正常";
+            case 0:
+                return "禁用";
+            case 2:
+                return "处罚中";
+            default:
+                return "未知";
+        }
     }
 }

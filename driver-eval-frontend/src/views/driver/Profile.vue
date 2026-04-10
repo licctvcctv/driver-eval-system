@@ -148,6 +148,9 @@ const scoreColor = computed(() => {
 
 const levelText = computed(() => {
   const level = profile.value.level
+  if (level === '金牌') return '金牌司机'
+  if (level === '银牌') return '银牌司机'
+  if (level === '普通') return '普通司机'
   if (level === 3) return '金牌司机'
   if (level === 2) return '银牌司机'
   return '普通司机'
@@ -155,6 +158,9 @@ const levelText = computed(() => {
 
 const levelTagType = computed(() => {
   const level = profile.value.level
+  if (level === '金牌') return 'warning'
+  if (level === '银牌') return ''
+  if (level === '普通') return 'info'
   if (level === 3) return 'warning'
   if (level === 2) return ''
   return 'info'

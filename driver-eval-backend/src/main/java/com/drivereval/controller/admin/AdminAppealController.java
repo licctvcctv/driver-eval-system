@@ -1,15 +1,22 @@
 package com.drivereval.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.drivereval.common.Result;
+import com.drivereval.entity.Complaint;
 import com.drivereval.entity.Appeal;
+import com.drivereval.mapper.ComplaintMapper;
+import com.drivereval.mapper.OrderInfoMapper;
 import com.drivereval.service.AppealService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/appeal")
@@ -18,15 +25,64 @@ public class AdminAppealController extends BaseController {
     @Autowired
     private AppealService appealService;
 
+    @Autowired
+    private ComplaintMapper complaintMapper;
+
+    @Autowired
+    private OrderInfoMapper orderInfoMapper;
+
     @GetMapping("/list")
     public Result<?> appealList(
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
-            HttpServletRequest request) {
+        HttpServletRequest request) {
 
         Page<Appeal> page = new Page<>(pageNum, pageSize);
-        return Result.success(appealService.getAllAppeals(status, page));
+        IPage<Appeal> appealPage = appealService.getAllAppeals(status, page);
+
+        // Batch-fetch complaints and order details to avoid N+1
+        List<Long> complaintIds = appealPage.getRecords().stream()
+                .map(Appeal::getComplaintId).filter(id -> id != null).distinct().collect(Collectors.toList());
+        Map<Long, Complaint> complaintMap = new HashMap<>();
+        if (!complaintIds.isEmpty()) {
+            complaintMapper.selectBatchIds(complaintIds).forEach(c -> complaintMap.put(c.getId(), c));
+        }
+        List<Long> orderIds = complaintMap.values().stream()
+                .map(Complaint::getOrderId).filter(id -> id != null).distinct().collect(Collectors.toList());
+        Map<Long, Map<String, Object>> orderMap = new HashMap<>();
+        if (!orderIds.isEmpty()) {
+            for (Map<String, Object> od : orderInfoMapper.selectOrderDetailsByIds(orderIds)) {
+                Object idObj = od.get("id");
+                if (idObj != null) orderMap.put(Long.valueOf(idObj.toString()), od);
+            }
+        }
+
+        List<Map<String, Object>> records = appealPage.getRecords().stream().map(item -> {
+            Complaint complaint = complaintMap.get(item.getComplaintId());
+            Map<String, Object> order = complaint != null ? orderMap.get(complaint.getOrderId()) : null;
+
+            Map<String, Object> view = new HashMap<>();
+            view.put("id", item.getId());
+            view.put("complaintId", item.getComplaintId());
+            view.put("orderId", complaint != null ? complaint.getOrderId() : null);
+            view.put("orderNo", order != null ? order.get("orderNo") : null);
+            view.put("driverId", item.getDriverId());
+            view.put("driverName", order != null ? order.get("driverName") : null);
+            view.put("complaintContent", complaint != null ? complaint.getContent() : null);
+            view.put("appealContent", item.getContent());
+            view.put("content", item.getContent());
+            view.put("status", item.getStatus());
+            view.put("adminRemark", item.getAdminRemark());
+            view.put("reviewTime", item.getReviewTime());
+            view.put("createTime", item.getCreateTime());
+            return view;
+        }).collect(Collectors.toList());
+
+        Page<Map<String, Object>> result = new Page<>(appealPage.getCurrent(), appealPage.getSize());
+        result.setTotal(appealPage.getTotal());
+        result.setRecords(records);
+        return Result.success(result);
     }
 
     @PostMapping("/review")

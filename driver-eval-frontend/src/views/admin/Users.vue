@@ -6,9 +6,9 @@
       <el-col :span="6">
         <el-select v-model="query.role" placeholder="角色筛选" clearable @change="loadData">
           <el-option label="全部" value="" />
-          <el-option label="乘客" value="乘客" />
-          <el-option label="司机" value="司机" />
-          <el-option label="管理员" value="管理员" />
+          <el-option label="乘客" :value="1" />
+          <el-option label="司机" :value="2" />
+          <el-option label="管理员" :value="3" />
         </el-select>
       </el-col>
       <el-col :span="6">
@@ -26,12 +26,12 @@
       <el-table-column prop="phone" label="手机号" />
       <el-table-column prop="role" label="角色" width="100">
         <template #default="{ row }">
-          <el-tag>{{ row.role }}</el-tag>
+          <el-tag>{{ roleLabel(row.role) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="statusType(row.status)">{{ row.status }}</el-tag>
+          <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="180" />
@@ -39,10 +39,10 @@
         <template #default="{ row }">
           <el-button
             size="small"
-            :type="row.status === '正常' ? 'danger' : 'success'"
+            :type="isNormal(row.status) ? 'danger' : 'success'"
             @click="handleToggle(row)"
           >
-            {{ row.status === '正常' ? '禁用' : '启用' }}
+            {{ isNormal(row.status) ? '禁用' : '启用' }}
           </el-button>
         </template>
       </el-table-column>
@@ -71,11 +71,29 @@ const tableData = ref([])
 const total = ref(0)
 const query = reactive({ role: '', keyword: '', pageNum: 1, pageSize: 10 })
 
+const roleLabel = (role) => {
+  const value = Number(role)
+  if (value === 1 || role === '乘客') return '乘客'
+  if (value === 2 || role === '司机') return '司机'
+  if (value === 3 || role === '管理员') return '管理员'
+  return role || '-'
+}
+
+const isNormal = (status) => Number(status) === 1 || status === '正常'
+
 const statusType = (s) => {
-  if (s === '正常') return 'success'
-  if (s === '禁用') return 'info'
-  if (s === '处罚中') return 'danger'
+  if (isNormal(s)) return 'success'
+  if (Number(s) === 0 || s === '禁用') return 'info'
+  if (Number(s) === 2 || s === '处罚中') return 'danger'
   return ''
+}
+
+const statusLabel = (status) => {
+  const value = Number(status)
+  if (value === 1 || status === '正常') return '正常'
+  if (value === 0 || status === '禁用') return '禁用'
+  if (value === 2 || status === '处罚中') return '处罚中'
+  return status || '-'
 }
 
 const loadData = async () => {
@@ -94,7 +112,10 @@ const loadData = async () => {
 
 const handleToggle = async (row) => {
   try {
-    await toggleStatus({ id: row.id, status: row.status === '正常' ? '禁用' : '正常' })
+    await toggleStatus({
+      userId: row.id,
+      status: isNormal(row.status) ? 0 : 1
+    })
     ElMessage.success('操作成功')
     loadData()
   } catch (e) {

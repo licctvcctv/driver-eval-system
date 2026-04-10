@@ -17,9 +17,21 @@
     </el-row>
 
     <el-table :data="tableData" border stripe v-loading="loading">
-      <el-table-column prop="driverName" label="司机" width="100" />
-      <el-table-column prop="complaintContent" label="投诉内容" show-overflow-tooltip />
-      <el-table-column prop="appealContent" label="申诉内容" show-overflow-tooltip />
+      <el-table-column label="司机" width="100">
+        <template #default="{ row }">
+          {{ row.driverName || row.driverId || '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="投诉内容" show-overflow-tooltip>
+        <template #default="{ row }">
+          {{ row.complaintContent || row.orderNo || row.complaintId || '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="申诉内容" show-overflow-tooltip>
+        <template #default="{ row }">
+          {{ row.appealContent || row.content || '-' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
           <el-tag :type="appealStatusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
@@ -83,17 +95,19 @@ const reviewVisible = ref(false)
 const reviewForm = reactive({ appealId: null, status: 1, remark: '' })
 
 const appealStatusType = (s) => {
-  if (s === 0) return 'warning'
-  if (s === 1) return 'success'
-  if (s === 2) return 'info'
+  const value = Number(s)
+  if (value === 0 || s === '待审核') return 'warning'
+  if (value === 1 || s === '已通过') return 'success'
+  if (value === 2 || s === '已驳回') return 'info'
   return ''
 }
 
 const statusLabel = (s) => {
-  if (s === 0) return '待审核'
-  if (s === 1) return '已通过'
-  if (s === 2) return '已驳回'
-  return '未知'
+  const value = Number(s)
+  if (value === 0 || s === '待审核') return '待审核'
+  if (value === 1 || s === '已通过') return '已通过'
+  if (value === 2 || s === '已驳回') return '已驳回'
+  return s || '未知'
 }
 
 const loadData = async () => {

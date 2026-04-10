@@ -80,11 +80,15 @@
                 </el-descriptions-item>
                 <el-descriptions-item label="司机等级">
                   <el-tag :type="getLevelTagType(dispatchResult.driverLevel)">
-                    {{ dispatchResult.driverLevel }}
+                    {{ levelText(dispatchResult.driverLevel) }}
                   </el-tag>
                 </el-descriptions-item>
-                <el-descriptions-item label="车辆信息">{{ dispatchResult.vehicleInfo }}</el-descriptions-item>
-                <el-descriptions-item label="车牌号">{{ dispatchResult.plateNumber }}</el-descriptions-item>
+                <el-descriptions-item label="车辆信息">
+                  {{ dispatchResult.vehicleInfo || dispatchResult.vehicleBrand || dispatchResult.vehicleTypeName || '未知车辆' }}
+                </el-descriptions-item>
+                <el-descriptions-item label="车牌号">
+                  {{ dispatchResult.plateNumber || dispatchResult.vehiclePlateNumber || '未知' }}
+                </el-descriptions-item>
                 <el-descriptions-item label="订单号">{{ dispatchResult.orderNo }}</el-descriptions-item>
               </el-descriptions>
             </template>
@@ -155,9 +159,21 @@ const fillDestination = (loc) => {
 }
 
 const getLevelTagType = (level) => {
-  if (level === '金牌') return 'warning'
-  if (level === '银牌') return ''
+  const value = Number(level)
+  if (value === 3 || level === '金牌') return 'warning'
+  if (value === 2 || level === '银牌') return ''
   return 'info'
+}
+
+const levelText = (level) => {
+  const value = Number(level)
+  if (value === 3) return '金牌司机'
+  if (value === 2) return '银牌司机'
+  if (value === 1) return '普通司机'
+  if (level === '金牌' || level === '银牌' || level === '普通') {
+    return `${level}司机`
+  }
+  return level || '普通司机'
 }
 
 const handleSubmit = async () => {
@@ -178,14 +194,14 @@ const handleSubmit = async () => {
       destLat: parseFloat(form.destLat)
     })
     const data = res.data || res
-    if (data.driverId || data.driverName) {
+    if (data.driverId || data.driverName || data.driverLevel != null) {
       dispatchResult.value = {
         driverAssigned: true,
         driverName: data.driverName || '未知',
         driverScore: data.driverScore || data.score || 5,
         driverLevel: data.driverLevel || data.level || '普通',
-        vehicleInfo: data.vehicleInfo || data.vehicleBrand || '未知车辆',
-        plateNumber: data.plateNumber || '未知',
+        vehicleInfo: data.vehicleInfo || data.vehicleBrand || data.vehicleTypeName || '未知车辆',
+        plateNumber: data.plateNumber || data.vehiclePlateNumber || '未知',
         orderNo: data.orderNo || ''
       }
       ElMessage.success('叫车成功，已为您分配司机！')

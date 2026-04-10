@@ -3,13 +3,21 @@
     <h2 style="margin-bottom: 20px">乘客评价管理</h2>
 
     <el-table :data="tableData" border stripe v-loading="loading">
-      <el-table-column prop="orderNo" label="订单号" width="180" />
-      <el-table-column label="乘客" width="100">
+      <el-table-column label="订单号" width="180">
         <template #default="{ row }">
-          {{ row.anonymous ? '匿名' : row.passengerName }}
+          {{ row.orderNo || row.orderId || '-' }}
         </template>
       </el-table-column>
-      <el-table-column prop="driverName" label="司机" width="100" />
+      <el-table-column label="乘客" width="100">
+        <template #default="{ row }">
+          {{ isAnonymous(row) ? '匿名' : (row.passengerName || row.passengerId || '-') }}
+        </template>
+      </el-table-column>
+      <el-table-column label="司机" width="100">
+        <template #default="{ row }">
+          {{ row.driverName || row.driverId || '-' }}
+        </template>
+      </el-table-column>
       <el-table-column label="评分" width="180">
         <template #default="{ row }">
           <el-rate v-model="row.starRating" disabled />
@@ -19,7 +27,7 @@
       <el-table-column label="标签" width="200">
         <template #default="{ row }">
           <el-tag
-            v-for="tag in (row.tags || [])"
+            v-for="tag in normalizeTags(row.tags)"
             :key="tag"
             size="small"
             style="margin: 2px"
@@ -51,6 +59,14 @@ const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
 const query = reactive({ pageNum: 1, pageSize: 10 })
+
+const isAnonymous = (row) => Boolean(row.anonymous ?? row.isAnonymous)
+
+const normalizeTags = (tags) => {
+  if (!tags) return []
+  if (Array.isArray(tags)) return tags.filter(Boolean)
+  return String(tags).split(',').map(t => t.trim()).filter(Boolean)
+}
 
 const loadData = async () => {
   loading.value = true

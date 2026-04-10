@@ -9,7 +9,7 @@
         <el-table-column prop="orderNo" label="订单号" width="180" show-overflow-tooltip />
         <el-table-column label="乘客" width="120">
           <template #default="{ row }">
-            {{ row.anonymous ? '匿名用户' : (row.passengerName || '-') }}
+            {{ isAnonymous(row) ? '匿名用户' : (row.passengerName || row.passenger?.realName || row.passenger?.username || '-') }}
           </template>
         </el-table-column>
         <el-table-column prop="content" label="投诉内容" show-overflow-tooltip />
@@ -46,7 +46,7 @@
         <el-table-column label="操作" width="100" fixed="right">
           <template #default="{ row }">
             <el-button
-              v-if="row.status === 1 && !row.hasAppeal"
+              v-if="row.status === 1 && !hasAppeal(row)"
               type="warning"
               size="small"
               @click="openAppealDialog(row)"
@@ -112,6 +112,14 @@ const appealRules = {
   content: [{ required: true, message: '请输入申诉内容', trigger: 'blur' }]
 }
 
+function isAnonymous(row) {
+  return Boolean(row.anonymous ?? row.isAnonymous)
+}
+
+function hasAppeal(row) {
+  return Boolean(row.hasAppeal ?? row.appealId ?? row.appealStatus === 1)
+}
+
 function parseImages(images) {
   if (!images) return []
   if (Array.isArray(images)) return images
@@ -161,7 +169,7 @@ async function handleSubmitAppeal() {
     // 敏感词检测
     const checkRes = await checkSensitive(appealForm.value.content)
     const checkData = checkRes.data || checkRes
-    if (checkData.contains) {
+    if (checkData.contains ?? checkData.hasSensitive ?? checkData.found) {
       ElMessage.warning('申诉内容包含敏感词，请修改后重试')
       appealLoading.value = false
       return

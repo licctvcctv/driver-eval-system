@@ -6,8 +6,8 @@
       <el-col :span="6">
         <el-select v-model="query.status" placeholder="状态筛选" clearable @change="loadData">
           <el-option label="全部" value="" />
-          <el-option label="生效中" value="生效中" />
-          <el-option label="已过期" value="已过期" />
+          <el-option label="生效中" :value="1" />
+          <el-option label="已过期" :value="2" />
         </el-select>
       </el-col>
       <el-col :span="4">
@@ -16,7 +16,11 @@
     </el-row>
 
     <el-table :data="tableData" border stripe v-loading="loading">
-      <el-table-column prop="driverName" label="司机姓名" />
+      <el-table-column label="司机姓名">
+        <template #default="{ row }">
+          {{ row.driverName || row.driverId || '-' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="punishReason" label="处罚原因" show-overflow-tooltip />
       <el-table-column prop="punishDays" label="处罚天数" width="100" />
       <el-table-column prop="punishStart" label="开始时间" width="180" />
@@ -24,7 +28,7 @@
       <el-table-column prop="weekComplaints" label="周投诉数" width="100" />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.status === '生效中' ? 'danger' : 'info'">{{ row.status }}</el-tag>
+          <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
     </el-table>
@@ -50,6 +54,19 @@ const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
 const query = reactive({ status: '', pageNum: 1, pageSize: 10 })
+
+const statusLabel = (status) => {
+  const value = Number(status)
+  if (value === 1 || status === '生效中') return '生效中'
+  if (value === 2 || status === '已过期') return '已过期'
+  return status || '-'
+}
+
+const statusType = (status) => {
+  const value = Number(status)
+  if (value === 1 || status === '生效中') return 'danger'
+  return 'info'
+}
 
 const loadData = async () => {
   loading.value = true

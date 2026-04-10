@@ -1,7 +1,6 @@
 package com.drivereval.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -127,9 +126,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
         orderInfoMapper.updateById(order);
 
         // 增加司机完成订单数
-        DriverInfo driverInfo = driverInfoMapper.selectById(order.getDriverId());
+        DriverInfo driverInfo = driverInfoMapper.selectOne(
+                new LambdaQueryWrapper<DriverInfo>()
+                        .eq(DriverInfo::getUserId, order.getDriverId()));
         if (driverInfo != null) {
-            driverInfo.setTotalOrders(driverInfo.getTotalOrders() + 1);
+            int totalOrders = driverInfo.getTotalOrders() == null ? 0 : driverInfo.getTotalOrders();
+            driverInfo.setTotalOrders(totalOrders + 1);
             driverInfoMapper.updateById(driverInfo);
         }
     }

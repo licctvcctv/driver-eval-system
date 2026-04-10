@@ -8,7 +8,7 @@
       <el-table :data="appealList" v-loading="loading" stripe border>
         <el-table-column label="投诉信息" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">
-            {{ row.complaintContent || row.orderNo || '-' }}
+            {{ row.complaintContent || row.orderNo || row.complaintId || '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="content" label="申诉内容" min-width="200" show-overflow-tooltip />

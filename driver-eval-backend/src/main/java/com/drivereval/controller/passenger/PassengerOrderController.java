@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,19 +37,24 @@ public class PassengerOrderController extends BaseController {
 
         OrderInfo order = orderService.createOrder(userId, departure, departureLng, departureLat,
                                                     destination, destLng, destLat);
-        return Result.success(order);
+        Map<String, Object> detail = orderInfoMapper.selectOrderDetailById(order.getId());
+        return Result.success(detail != null ? detail : order);
     }
 
     @GetMapping("/list")
     public Result<?> getOrders(
             @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String statusList,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             HttpServletRequest request) {
         Long userId = getUserId(request);
+        List<Integer> statusValues = parseStatusList(statusList);
+        Integer statusValue = statusValues.isEmpty() ? status : null;
+        List<Integer> statusListValue = statusValues.isEmpty() ? null : statusValues;
 
         Page<Map<String, Object>> page = new Page<>(pageNum, pageSize);
-        return Result.success(orderInfoMapper.selectOrderWithDetails(page, userId, null, status, null));
+        return Result.success(orderInfoMapper.selectOrderWithDetails(page, userId, null, statusValue, statusListValue));
     }
 
     @PostMapping("/cancel/{orderId}")
@@ -63,5 +70,23 @@ public class PassengerOrderController extends BaseController {
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
+    }
+
+    private List<Integer> parseStatusList(String statusList) {
+        List<Integer> values = new ArrayList<>();
+        if (statusList == null || statusList.trim().isEmpty()) {
+            return values;
+        }
+        String[] parts = statusList.split(",");
+        for (String part : parts) {
+            if (part == null || part.trim().isEmpty()) {
+                continue;
+            }
+            try {
+                values.add(Integer.valueOf(part.trim()));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return values;
     }
 }

@@ -4,12 +4,15 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.VehicleInfo;
+import com.drivereval.entity.VehicleType;
 import com.drivereval.mapper.VehicleInfoMapper;
+import com.drivereval.mapper.VehicleTypeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -19,14 +22,40 @@ public class DriverVehicleController extends BaseController {
     @Autowired
     private VehicleInfoMapper vehicleInfoMapper;
 
+    @Autowired
+    private VehicleTypeMapper vehicleTypeMapper;
+
     @GetMapping("/info")
     public Result<?> getMyVehicle(HttpServletRequest request) {
         Long userId = getUserId(request);
 
         VehicleInfo vehicle = vehicleInfoMapper.selectOne(
                 new QueryWrapper<VehicleInfo>().eq("driver_id", userId));
+        if (vehicle == null) {
+            return Result.success(null);
+        }
 
-        return Result.success(vehicle);
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", vehicle.getId());
+        data.put("driverId", vehicle.getDriverId());
+        data.put("plateNumber", vehicle.getPlateNumber());
+        data.put("brand", vehicle.getBrand());
+        data.put("model", vehicle.getModel());
+        data.put("color", vehicle.getColor());
+        data.put("vehicleTypeId", vehicle.getVehicleTypeId());
+        data.put("seats", vehicle.getSeats());
+        data.put("status", vehicle.getStatus());
+        data.put("createTime", vehicle.getCreateTime());
+        data.put("updateTime", vehicle.getUpdateTime());
+
+        if (vehicle.getVehicleTypeId() != null) {
+            VehicleType type = vehicleTypeMapper.selectById(vehicle.getVehicleTypeId());
+            data.put("vehicleTypeName", type != null ? type.getTypeName() : null);
+        } else {
+            data.put("vehicleTypeName", null);
+        }
+
+        return Result.success(data);
     }
 
     @PostMapping("/save")

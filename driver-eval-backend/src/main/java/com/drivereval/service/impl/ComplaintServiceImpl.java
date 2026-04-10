@@ -97,10 +97,14 @@ public class ComplaintServiceImpl extends ServiceImpl<ComplaintMapper, Complaint
 
         // 如果投诉通过，增加司机投诉次数并重新计算评分
         if (status == Constants.STATUS_APPROVED) {
-            DriverInfo driverInfo = driverInfoMapper.selectById(complaint.getDriverId());
+            DriverInfo driverInfo = driverInfoMapper.selectOne(
+                    new LambdaQueryWrapper<DriverInfo>()
+                            .eq(DriverInfo::getUserId, complaint.getDriverId()));
             if (driverInfo != null) {
-                driverInfo.setWeekComplaints(driverInfo.getWeekComplaints() + 1);
-                driverInfo.setTotalComplaints(driverInfo.getTotalComplaints() + 1);
+                int weekComplaints = driverInfo.getWeekComplaints() == null ? 0 : driverInfo.getWeekComplaints();
+                int totalComplaints = driverInfo.getTotalComplaints() == null ? 0 : driverInfo.getTotalComplaints();
+                driverInfo.setWeekComplaints(weekComplaints + 1);
+                driverInfo.setTotalComplaints(totalComplaints + 1);
                 driverInfoMapper.updateById(driverInfo);
                 scoreService.recalculateScore(complaint.getDriverId());
             }

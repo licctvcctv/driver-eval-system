@@ -17,7 +17,7 @@
           <el-descriptions-item label="品牌">{{ vehicle.brand }}</el-descriptions-item>
           <el-descriptions-item label="型号">{{ vehicle.model }}</el-descriptions-item>
           <el-descriptions-item label="颜色">{{ vehicle.color }}</el-descriptions-item>
-          <el-descriptions-item label="车辆类型">{{ vehicle.vehicleTypeName || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="车辆类型">{{ vehicle.vehicleTypeName || vehicle.vehicleType || '-' }}</el-descriptions-item>
           <el-descriptions-item label="座位数">{{ vehicle.seats }}</el-descriptions-item>
         </el-descriptions>
       </div>

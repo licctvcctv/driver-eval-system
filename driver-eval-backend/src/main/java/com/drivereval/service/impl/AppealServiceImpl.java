@@ -94,10 +94,14 @@ public class AppealServiceImpl extends ServiceImpl<AppealMapper, Appeal> impleme
 
         // 如果申诉通过，减少司机投诉次数并重新计算评分
         if (status == Constants.STATUS_APPROVED) {
-            DriverInfo driverInfo = driverInfoMapper.selectById(appeal.getDriverId());
+            DriverInfo driverInfo = driverInfoMapper.selectOne(
+                    new LambdaQueryWrapper<DriverInfo>()
+                            .eq(DriverInfo::getUserId, appeal.getDriverId()));
             if (driverInfo != null) {
-                driverInfo.setWeekComplaints(Math.max(0, driverInfo.getWeekComplaints() - 1));
-                driverInfo.setTotalComplaints(Math.max(0, driverInfo.getTotalComplaints() - 1));
+                int weekComplaints = driverInfo.getWeekComplaints() == null ? 0 : driverInfo.getWeekComplaints();
+                int totalComplaints = driverInfo.getTotalComplaints() == null ? 0 : driverInfo.getTotalComplaints();
+                driverInfo.setWeekComplaints(Math.max(0, weekComplaints - 1));
+                driverInfo.setTotalComplaints(Math.max(0, totalComplaints - 1));
                 driverInfoMapper.updateById(driverInfo);
                 scoreService.recalculateScore(appeal.getDriverId());
             }

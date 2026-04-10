@@ -78,7 +78,7 @@
         <el-form-item label="评价标签">
           <el-checkbox-group v-model="evalForm.tagIds">
             <el-checkbox v-for="tag in tagList" :key="tag.id" :label="tag.id">
-              {{ tag.name }}
+              {{ tag.tagName || tag.name }}
             </el-checkbox>
           </el-checkbox-group>
         </el-form-item>
@@ -186,6 +186,9 @@ const levelTagType = (level) => {
 }
 
 const levelText = (level) => {
+  if (level === '金牌') return '金牌司机'
+  if (level === '银牌') return '银牌司机'
+  if (level === '普通') return '普通司机'
   if (level === 3) return '金牌司机'
   if (level === 2) return '银牌司机'
   if (level === 1) return '普通司机'

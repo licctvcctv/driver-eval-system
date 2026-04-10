@@ -8,7 +8,7 @@
       <el-table :data="evalList" v-loading="loading" stripe border>
         <el-table-column label="乘客" width="120">
           <template #default="{ row }">
-            {{ row.anonymous ? '匿名用户' : (row.passengerName || '-') }}
+            {{ isAnonymous(row) ? '匿名用户' : (row.passengerName || row.passenger?.realName || row.passenger?.username || '-') }}
           </template>
         </el-table-column>
         <el-table-column label="评分" width="180">
@@ -20,7 +20,7 @@
         <el-table-column label="标签" width="200">
           <template #default="{ row }">
             <el-tag
-              v-for="tag in (row.tags || '').split(',').filter(t => t)"
+              v-for="tag in normalizeTags(row.tags)"
               :key="tag"
               size="small"
               style="margin: 2px"
@@ -103,6 +103,16 @@ const replyRules = {
   content: [{ required: true, message: '请输入回复内容', trigger: 'blur' }]
 }
 
+function isAnonymous(row) {
+  return Boolean(row.anonymous ?? row.isAnonymous)
+}
+
+function normalizeTags(tags) {
+  if (!tags) return []
+  if (Array.isArray(tags)) return tags.filter(Boolean)
+  return String(tags).split(',').map(t => t.trim()).filter(Boolean)
+}
+
 async function fetchEvals() {
   loading.value = true
   try {
@@ -132,7 +142,7 @@ async function handleReply() {
     // 敏感词检测
     const checkRes = await checkSensitive(replyForm.value.content)
     const checkData = checkRes.data || checkRes
-    if (checkData.contains) {
+    if (checkData.contains ?? checkData.hasSensitive ?? checkData.found) {
       ElMessage.warning('回复内容包含敏感词，请修改后重试')
       replyLoading.value = false
       return

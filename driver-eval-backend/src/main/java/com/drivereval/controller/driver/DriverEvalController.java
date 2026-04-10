@@ -1,6 +1,7 @@
 package com.drivereval.controller.driver;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.drivereval.common.Result;
 import com.drivereval.entity.EvalTag;
@@ -9,6 +10,7 @@ import com.drivereval.entity.EvaluationTagRelation;
 import com.drivereval.mapper.EvalTagMapper;
 import com.drivereval.mapper.EvaluationMapper;
 import com.drivereval.mapper.EvaluationTagRelationMapper;
+import com.drivereval.mapper.OrderInfoMapper;
 import com.drivereval.service.EvaluationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +36,9 @@ public class DriverEvalController extends BaseController {
     @Autowired
     private EvaluationService evaluationService;
 
+    @Autowired
+    private OrderInfoMapper orderInfoMapper;
+
     @GetMapping("/list")
     public Result<?> getPassengerEvaluations(
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -42,7 +47,44 @@ public class DriverEvalController extends BaseController {
         Long userId = getUserId(request);
 
         Page<Evaluation> page = new Page<>(pageNum, pageSize);
-        return Result.success(evaluationService.getDriverEvaluations(userId, page));
+        IPage<Evaluation> evaluationPage = evaluationService.getDriverEvaluations(userId, page);
+
+        List<Map<String, Object>> records = evaluationPage.getRecords().stream().map(item -> {
+            Map<String, Object> order = orderInfoMapper.selectOrderDetailById(item.getOrderId());
+            List<EvaluationTagRelation> relations = evaluationTagRelationMapper.selectList(
+                    new QueryWrapper<EvaluationTagRelation>().eq("evaluation_id", item.getId()));
+            List<Long> tagIds = relations.stream().map(EvaluationTagRelation::getTagId).collect(Collectors.toList());
+            List<String> tagNames = new ArrayList<>();
+            if (!tagIds.isEmpty()) {
+                List<EvalTag> tags = evalTagMapper.selectBatchIds(tagIds);
+                Map<Long, String> tagNameMap = tags.stream().collect(Collectors.toMap(EvalTag::getId, EvalTag::getTagName));
+                for (Long tagId : tagIds) {
+                    tagNames.add(tagNameMap.getOrDefault(tagId, "未知标签"));
+                }
+            }
+
+            Map<String, Object> view = new HashMap<>();
+            view.put("id", item.getId());
+            view.put("orderId", item.getOrderId());
+            view.put("orderNo", order != null ? order.get("orderNo") : null);
+            view.put("passengerId", item.getPassengerId());
+            view.put("passengerName", order != null ? order.get("passengerName") : null);
+            view.put("driverId", item.getDriverId());
+            view.put("starRating", item.getStarRating());
+            view.put("content", item.getContent());
+            view.put("isAnonymous", item.getIsAnonymous());
+            view.put("anonymous", item.getIsAnonymous());
+            view.put("tags", tagNames);
+            view.put("driverReply", item.getDriverReply());
+            view.put("replyTime", item.getReplyTime());
+            view.put("createTime", item.getCreateTime());
+            return view;
+        }).collect(Collectors.toList());
+
+        Page<Map<String, Object>> result = new Page<>(evaluationPage.getCurrent(), evaluationPage.getSize());
+        result.setTotal(evaluationPage.getTotal());
+        result.setRecords(records);
+        return Result.success(result);
     }
 
     @PostMapping("/reply")
@@ -78,6 +120,11 @@ public class DriverEvalController extends BaseController {
                 Map<String, Object> item = new HashMap<>();
                 item.put("tagId", entry.getKey());
                 item.put("tagName", tagNameMap.getOrDefault(entry.getKey(), "未知标签"));
+                EvalTag tag = tags.stream().filter(t -> t.getId().equals(entry.getKey())).findFirst().orElse(null);
+                item.put("tagType", tag != null ? tag.getTagType() : null);
+                item.put("tagTypeText", tag != null
+                        ? (tag.getTagType() != null && tag.getTagType() == 1 ? "好评" : "差评")
+                        : null);
                 item.put("count", entry.getValue());
                 result.add(item);
             }

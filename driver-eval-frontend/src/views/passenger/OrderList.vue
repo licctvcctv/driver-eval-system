@@ -109,6 +109,9 @@ const levelTagType = (level) => {
 }
 
 const levelText = (level) => {
+  if (level === '金牌') return '金牌司机'
+  if (level === '银牌') return '银牌司机'
+  if (level === '普通') return '普通司机'
   if (level === 3) return '金牌司机'
   if (level === 2) return '银牌司机'
   if (level === 1) return '普通司机'

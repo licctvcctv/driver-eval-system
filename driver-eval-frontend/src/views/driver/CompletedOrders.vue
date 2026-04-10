@@ -20,10 +20,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="completeTime" label="完成时间" width="170" />
-        <el-table-column label="操作" width="120" fixed="right">
+          <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
             <el-button
-              v-if="!row.driverEvaluated"
+              v-if="!isDriverEvaluated(row)"
               type="primary"
               size="small"
               @click="openEvalDialog(row)"
@@ -86,6 +86,15 @@ const queryParams = ref({ page: 1, size: 10 })
 const evalDialogVisible = ref(false)
 const evalLoading = ref(false)
 const evalForm = ref({ orderId: null, orderNo: '', content: '' })
+
+const isDriverEvaluated = (row) => {
+  return Boolean(
+    row.driverEvaluated ||
+    row.isDriverEvaluated ||
+    row.driverEvaluationId ||
+    row.driverEvaluation
+  )
+}
 
 async function fetchOrders() {
   loading.value = true

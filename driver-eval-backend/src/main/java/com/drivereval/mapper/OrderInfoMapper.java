@@ -17,4 +17,8 @@ public interface OrderInfoMapper extends BaseMapper<OrderInfo> {
         @Param("driverId") Long driverId,
         @Param("status") Integer status,
         @Param("statusList") List<Integer> statusList);
+
+    Map<String, Object> selectOrderDetailById(@Param("orderId") Long orderId);
+
+    List<Map<String, Object>> selectOrderDetailsByIds(@Param("orderIds") List<Long> orderIds);
 }

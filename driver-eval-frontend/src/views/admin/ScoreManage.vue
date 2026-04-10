@@ -17,7 +17,11 @@
     </el-row>
 
     <el-table :data="tableData" border stripe v-loading="loading" @row-click="showDetail" style="cursor: pointer">
-      <el-table-column prop="driverName" label="司机姓名" />
+      <el-table-column label="司机姓名">
+        <template #default="{ row }">
+          {{ row.driverName || row.user?.realName || row.user?.username || row.username || '-' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="score" label="评分" width="220">
         <template #default="{ row }">
           <span :style="{ color: scoreColor(row.score), fontWeight: 'bold', marginRight: '8px' }">{{ row.score }}</span>
@@ -40,7 +44,9 @@
       <el-table-column prop="weekComplaints" label="周投诉数" width="100" />
       <el-table-column prop="onlineStatus" label="在线状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.onlineStatus === '在线' ? 'success' : 'info'" size="small">{{ row.onlineStatus }}</el-tag>
+          <el-tag :type="onlineStatusType(row.onlineStatus)" size="small">
+            {{ onlineStatusLabel(row.onlineStatus) }}
+          </el-tag>
         </template>
       </el-table-column>
     </el-table>
@@ -59,23 +65,35 @@
     <el-dialog v-model="detailVisible" title="评分详情" width="650px">
       <div v-if="detailData">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="司机姓名">{{ detailData.user?.realName || detailData.user?.username || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="司机姓名">{{ detailData.driverName || detailData.user?.realName || detailData.user?.username || '-' }}</el-descriptions-item>
           <el-descriptions-item label="当前评分">{{ detailData.driverInfo?.score }}</el-descriptions-item>
           <el-descriptions-item label="等级">{{ levelLabel(detailData.driverInfo?.level) }}</el-descriptions-item>
           <el-descriptions-item label="总订单数">{{ detailData.driverInfo?.totalOrders }}</el-descriptions-item>
         </el-descriptions>
         <h4 style="margin: 16px 0 8px">评分变更记录</h4>
         <el-table :data="detailData.scoreLogs || []" border size="small" max-height="300">
-          <el-table-column prop="changeTime" label="时间" width="180" />
-          <el-table-column prop="changeType" label="变更类型" width="120" />
-          <el-table-column prop="changeValue" label="变更值" width="100">
+          <el-table-column label="时间" width="180">
             <template #default="{ row }">
-              <span :style="{ color: row.changeValue > 0 ? '#67C23A' : '#F56C6C' }">
-                {{ row.changeValue > 0 ? '+' : '' }}{{ row.changeValue }}
+              {{ row.changeTime || row.createTime || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="变更类型" width="120">
+            <template #default="{ row }">
+              {{ row.changeType || getChangeType(row) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="变更值" width="100">
+            <template #default="{ row }">
+              <span :style="{ color: getChangeValue(row) > 0 ? '#67C23A' : '#F56C6C' }">
+                {{ getChangeValue(row) > 0 ? '+' : '' }}{{ getChangeValue(row) }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="remark" label="备注" show-overflow-tooltip />
+          <el-table-column label="备注" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ row.remark || row.changeReason || '-' }}
+            </template>
+          </el-table-column>
         </el-table>
       </div>
     </el-dialog>
@@ -112,6 +130,36 @@ const levelLabel = (l) => {
   return l  // fallback for string values
 }
 
+const onlineStatusLabel = (status) => {
+  const value = Number(status)
+  if (value === 1 || status === '在线') return '在线'
+  if (value === 2 || status === '处罚中') return '处罚中'
+  return '离线'
+}
+
+const onlineStatusType = (status) => {
+  const value = Number(status)
+  if (value === 1 || status === '在线') return 'success'
+  if (value === 2 || status === '处罚中') return 'danger'
+  return 'info'
+}
+
+const getChangeValue = (row) => {
+  const oldScore = Number(row.oldScore ?? row.beforeScore ?? 0)
+  const newScore = Number(row.newScore ?? row.afterScore ?? 0)
+  if (!Number.isNaN(oldScore) && !Number.isNaN(newScore)) {
+    return Number((newScore - oldScore).toFixed(2))
+  }
+  return Number(row.changeValue ?? 0)
+}
+
+const getChangeType = (row) => {
+  const value = getChangeValue(row)
+  if (value > 0) return '升分'
+  if (value < 0) return '降分'
+  return '不变'
+}
+
 const loadData = async () => {
   loading.value = true
   try {
@@ -128,7 +176,7 @@ const loadData = async () => {
 
 const showDetail = async (row) => {
   try {
-    const res = await getDriverScoreDetail(row.driverId || row.id)
+    const res = await getDriverScoreDetail(row.userId || row.driverId || row.id)
     detailData.value = res.data || res
     detailVisible.value = true
   } catch (e) {
