@@ -9,9 +9,13 @@ import com.drivereval.common.exception.BusinessException;
 import com.drivereval.entity.Appeal;
 import com.drivereval.entity.Complaint;
 import com.drivereval.entity.DriverInfo;
+import com.drivereval.entity.DriverPunish;
+import com.drivereval.entity.SysUser;
 import com.drivereval.mapper.AppealMapper;
 import com.drivereval.mapper.ComplaintMapper;
 import com.drivereval.mapper.DriverInfoMapper;
+import com.drivereval.mapper.DriverPunishMapper;
+import com.drivereval.mapper.SysUserMapper;
 import com.drivereval.service.AppealService;
 import com.drivereval.service.ScoreService;
 import com.drivereval.service.SensitiveWordService;
@@ -39,6 +43,12 @@ public class AppealServiceImpl extends ServiceImpl<AppealMapper, Appeal> impleme
 
     @Autowired
     private ScoreService scoreService;
+
+    @Autowired
+    private DriverPunishMapper driverPunishMapper;
+
+    @Autowired
+    private SysUserMapper sysUserMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -103,8 +113,37 @@ public class AppealServiceImpl extends ServiceImpl<AppealMapper, Appeal> impleme
             if (driverInfo != null) {
                 int weekComplaints = driverInfo.getWeekComplaints() == null ? 0 : driverInfo.getWeekComplaints();
                 int totalComplaints = driverInfo.getTotalComplaints() == null ? 0 : driverInfo.getTotalComplaints();
-                driverInfo.setWeekComplaints(Math.max(0, weekComplaints - 1));
+                int newWeekComplaints = Math.max(0, weekComplaints - 1);
+                driverInfo.setWeekComplaints(newWeekComplaints);
                 driverInfo.setTotalComplaints(Math.max(0, totalComplaints - 1));
+
+                // If week complaints dropped below 5 and driver is currently punished, lift the punishment
+                if (newWeekComplaints < 5 && driverInfo.getOnlineStatus() != null
+                        && driverInfo.getOnlineStatus() == Constants.PUNISHED) {
+                    // Find active punishment record and mark as expired
+                    DriverPunish activePunish = driverPunishMapper.selectOne(
+                            new LambdaQueryWrapper<DriverPunish>()
+                                    .eq(DriverPunish::getDriverId, appeal.getDriverId())
+                                    .eq(DriverPunish::getStatus, Constants.PUNISH_ACTIVE)
+                                    .orderByDesc(DriverPunish::getCreateTime)
+                                    .last("LIMIT 1"));
+                    if (activePunish != null) {
+                        activePunish.setStatus(Constants.PUNISH_EXPIRED);
+                        driverPunishMapper.updateById(activePunish);
+                    }
+
+                    // Set driver back to OFFLINE and clear punish end time
+                    driverInfo.setOnlineStatus(Constants.OFFLINE);
+                    driverInfo.setPunishEndTime(null);
+
+                    // Restore SysUser status to STATUS_APPROVED (1)
+                    SysUser sysUser = sysUserMapper.selectById(appeal.getDriverId());
+                    if (sysUser != null) {
+                        sysUser.setStatus(Constants.STATUS_APPROVED);
+                        sysUserMapper.updateById(sysUser);
+                    }
+                }
+
                 driverInfoMapper.updateById(driverInfo);
                 scoreService.recalculateScore(appeal.getDriverId());
             }

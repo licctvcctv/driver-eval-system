@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.drivereval.common.Constants;
+import com.drivereval.common.util.DistanceUtil;
 import com.drivereval.common.exception.BusinessException;
 import com.drivereval.entity.DriverInfo;
 import com.drivereval.entity.OrderInfo;
@@ -52,6 +53,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
         order.setDestination(destination);
         order.setDestLng(destLng);
         order.setDestLat(destLat);
+
+        // 计算距离(km)和预估价格
+        double distKm = DistanceUtil.haversine(
+                depLat.doubleValue(), depLng.doubleValue(),
+                destLat.doubleValue(), destLng.doubleValue());
+        order.setDistance(BigDecimal.valueOf(distKm).setScale(1, java.math.RoundingMode.HALF_UP));
+        double price = Constants.PRICE_BASE + distKm * Constants.PRICE_PER_KM;
+        order.setPrice(BigDecimal.valueOf(price).setScale(2, java.math.RoundingMode.HALF_UP));
+
         order.setStatus(Constants.ORDER_DISPATCHING);
         order.setIsEvaluated(0);
         order.setIsComplained(0);
@@ -121,7 +131,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
         if (order.getStatus() != Constants.ORDER_DISPATCHED) {
             throw new BusinessException("订单状态不允许接单");
         }
-        // For demo: accept goes directly to IN_PROGRESS (skip ACCEPTED state)
+        // Demo simplification: skip ORDER_ACCEPTED (status=2) and go directly to IN_PROGRESS (status=3).
+        // In this demo flow, the driver clicks "accept" which immediately starts the ride.
+        // ORDER_ACCEPTED is reserved for a future two-step flow: accept -> start ride.
         order.setStatus(Constants.ORDER_IN_PROGRESS);
         orderInfoMapper.updateById(order);
     }

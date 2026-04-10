@@ -7,6 +7,9 @@ export function getMyVehicle() {
 export function saveVehicle(data) {
   return request({ url: '/driver/vehicle/save', method: 'post', data })
 }
+export function deleteVehicle(id) {
+  return request({ url: `/driver/vehicle/delete/${id}`, method: 'delete' })
+}
 
 // Admin
 export function getVehicleList(params) {

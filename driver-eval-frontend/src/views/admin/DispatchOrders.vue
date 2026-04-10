@@ -8,6 +8,15 @@
       <el-table-column prop="driverName" label="司机" />
       <el-table-column prop="departure" label="出发地" show-overflow-tooltip />
       <el-table-column prop="destination" label="目的地" show-overflow-tooltip />
+      <el-table-column label="距离" width="80">
+        <template #default="{ row }">{{ row.distance ? Number(row.distance).toFixed(1) : '-' }}</template>
+      </el-table-column>
+      <el-table-column label="费用" width="80">
+        <template #default="{ row }">
+          <span v-if="row.price" style="color:#F56C6C;font-weight:600">¥{{ Number(row.price).toFixed(2) }}</span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="dispatchScore" label="派单评分" width="100" />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">

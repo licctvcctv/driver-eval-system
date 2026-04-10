@@ -4,9 +4,18 @@
       <template #header>
         <div class="card-header">
           <span>车辆信息管理</span>
-          <el-button v-if="hasVehicle && !editing" type="primary" link @click="startEdit">
-            <el-icon><Edit /></el-icon> 编辑
-          </el-button>
+          <div v-if="hasVehicle && !editing">
+            <el-button type="primary" link @click="startEdit">
+              <el-icon><Edit /></el-icon> 编辑
+            </el-button>
+            <el-popconfirm title="确定要删除该车辆吗？" @confirm="handleDelete">
+              <template #reference>
+                <el-button type="danger" link>
+                  <el-icon><Delete /></el-icon> 删除
+                </el-button>
+              </template>
+            </el-popconfirm>
+          </div>
         </div>
       </template>
 
@@ -70,9 +79,9 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { Edit } from '@element-plus/icons-vue'
+import { Edit, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getMyVehicle, saveVehicle } from '@/api/vehicle'
+import { getMyVehicle, saveVehicle, deleteVehicle } from '@/api/vehicle'
 import { getCommonVehicleTypes } from '@/api/common'
 
 const vehicle = ref({})
@@ -137,6 +146,17 @@ async function fetchVehicleTypes() {
     vehicleTypes.value = res.data || res || []
   } catch (e) {
     console.error(e)
+  }
+}
+
+async function handleDelete() {
+  try {
+    await deleteVehicle(vehicle.value.id)
+    ElMessage.success('删除成功')
+    vehicle.value = {}
+    editing.value = false
+  } catch (e) {
+    ElMessage.error(e.message || '删除失败')
   }
 }
 

@@ -5,8 +5,10 @@ import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.DriverInfo;
 import com.drivereval.entity.SysUser;
+import com.drivereval.entity.VehicleInfo;
 import com.drivereval.mapper.DriverInfoMapper;
 import com.drivereval.mapper.SysUserMapper;
+import com.drivereval.mapper.VehicleInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +28,9 @@ public class DriverProfileController extends BaseController {
 
     @Autowired
     private DriverInfoMapper driverInfoMapper;
+
+    @Autowired
+    private VehicleInfoMapper vehicleInfoMapper;
 
     @GetMapping("/info")
     public Result<?> getProfile(HttpServletRequest request) {
@@ -69,6 +74,18 @@ public class DriverProfileController extends BaseController {
                 new QueryWrapper<DriverInfo>().eq("user_id", userId));
         if (driverInfo == null) {
             return Result.error("司机信息不存在");
+        }
+
+        // 处罚中的司机不允许上线
+        if (driverInfo.getOnlineStatus() != null && driverInfo.getOnlineStatus() == Constants.PUNISHED) {
+            return Result.error("您当前处于处罚期间，无法上线");
+        }
+
+        // 检查是否已绑定车辆
+        VehicleInfo vehicle = vehicleInfoMapper.selectOne(
+                new QueryWrapper<VehicleInfo>().eq("driver_id", userId));
+        if (vehicle == null) {
+            return Result.error("请先绑定车辆信息再上线");
         }
 
         // 设置随机北京附近经纬度（用于演示）

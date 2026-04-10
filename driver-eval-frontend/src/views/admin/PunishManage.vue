@@ -194,13 +194,13 @@ const loadStats = async () => {
   try {
     const [resActive, resAll] = await Promise.all([
       getPunishList({ status: 1, pageNum: 1, pageSize: 1 }),
-      getPunishList({ status: '', pageNum: 1, pageSize: 1 })
+      getPunishList({ status: '', pageNum: 1, pageSize: 500 })
     ])
     const dActive = resActive.data || resActive
     const dAll = resAll.data || resAll
     stats.active = dActive.total || 0
     stats.totalCount = dAll.total || 0
-    // 本周新增从总列表中统计
+    // 统计本周新增（需要完整记录列表来按 createTime 过滤）
     const allRecords = (dAll.records || dAll.list || [])
     const weekAgo = new Date(Date.now() - 7 * 86400000)
     stats.weekNew = allRecords.filter(r => r.createTime && new Date(r.createTime) >= weekAgo).length

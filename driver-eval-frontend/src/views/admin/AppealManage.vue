@@ -62,7 +62,26 @@
       @size-change="loadData"
     />
 
-    <el-dialog v-model="reviewVisible" title="审核申诉" width="450px">
+    <el-dialog v-model="reviewVisible" title="审核申诉" width="550px">
+      <div v-if="currentRow" style="margin-bottom: 16px">
+        <el-descriptions :column="2" border size="small" title="司机信息">
+          <el-descriptions-item label="当前评分">{{ currentRow.driverScore ?? '-' }}</el-descriptions-item>
+          <el-descriptions-item label="总投诉数">{{ currentRow.driverTotalComplaints ?? '-' }}</el-descriptions-item>
+          <el-descriptions-item label="本周投诉">{{ currentRow.driverWeekComplaints ?? '-' }}</el-descriptions-item>
+          <el-descriptions-item label="订单号">{{ currentRow.orderNo || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="出发地" v-if="currentRow.departure">{{ currentRow.departure }}</el-descriptions-item>
+          <el-descriptions-item label="目的地" v-if="currentRow.destination">{{ currentRow.destination }}</el-descriptions-item>
+        </el-descriptions>
+        <el-alert
+          v-if="currentRow.driverOnlineStatus === 2"
+          type="warning"
+          :closable="false"
+          show-icon
+          style="margin-top: 12px"
+        >
+          该司机当前处于处罚中，通过申诉将解除处罚
+        </el-alert>
+      </div>
       <el-form :model="reviewForm" label-width="80px">
         <el-form-item label="审核结果">
           <el-radio-group v-model="reviewForm.status">
@@ -93,6 +112,7 @@ const total = ref(0)
 const query = reactive({ status: '', pageNum: 1, pageSize: 10 })
 const reviewVisible = ref(false)
 const reviewForm = reactive({ appealId: null, status: 1, remark: '' })
+const currentRow = ref(null)
 
 const appealStatusType = (s) => {
   const value = Number(s)
@@ -125,6 +145,7 @@ const loadData = async () => {
 }
 
 const openReview = (row) => {
+  currentRow.value = row
   Object.assign(reviewForm, { appealId: row.id, status: 1, remark: '' })
   reviewVisible.value = true
 }

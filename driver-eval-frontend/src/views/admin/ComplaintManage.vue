@@ -76,7 +76,24 @@
       @size-change="loadData"
     />
 
-    <el-dialog v-model="reviewVisible" title="审核投诉" width="450px">
+    <el-dialog v-model="reviewVisible" title="审核投诉" width="500px">
+      <div v-if="currentRow" style="margin-bottom: 16px">
+        <el-descriptions :column="2" border size="small" title="司机信息">
+          <el-descriptions-item label="当前评分">{{ currentRow.driverScore ?? '-' }}</el-descriptions-item>
+          <el-descriptions-item label="总投诉数">{{ currentRow.driverTotalComplaints ?? '-' }}</el-descriptions-item>
+          <el-descriptions-item label="本周投诉">
+            <span :style="{ color: (currentRow.driverWeekComplaints ?? 0) >= 4 ? '#f56c6c' : '', fontWeight: (currentRow.driverWeekComplaints ?? 0) >= 4 ? 'bold' : 'normal' }">
+              {{ currentRow.driverWeekComplaints ?? '-' }}
+            </span>
+            <el-tag v-if="(currentRow.driverWeekComplaints ?? 0) >= 4" type="danger" size="small" style="margin-left: 8px">
+              再通过1次将触发自动处罚
+            </el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="司机等级">
+            {{ currentRow.driverLevel === 3 ? '金牌' : currentRow.driverLevel === 2 ? '银牌' : '普通' }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
       <el-form :model="reviewForm" label-width="80px">
         <el-form-item label="审核结果">
           <el-radio-group v-model="reviewForm.status">
@@ -107,6 +124,7 @@ const total = ref(0)
 const query = reactive({ status: '', pageNum: 1, pageSize: 10 })
 const reviewVisible = ref(false)
 const reviewForm = reactive({ complaintId: null, status: 1, remark: '' })
+const currentRow = ref(null)
 
 const complaintStatusType = (s) => {
   const value = Number(s)
@@ -139,6 +157,7 @@ const loadData = async () => {
 }
 
 const openReview = (row) => {
+  currentRow.value = row
   Object.assign(reviewForm, { complaintId: row.id, status: 1, remark: '' })
   reviewVisible.value = true
 }

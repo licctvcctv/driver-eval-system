@@ -54,7 +54,7 @@ public class PunishScheduleTask {
             punish.setPunishDays(3);
             punish.setPunishStart(LocalDateTime.now());
             punish.setPunishEnd(LocalDateTime.now().plusDays(3));
-            punish.setStatus(Constants.STATUS_APPROVED);
+            punish.setStatus(Constants.PUNISH_ACTIVE);
             punish.setWeekComplaints(driver.getWeekComplaints());
             driverPunishMapper.insert(punish);
 
@@ -93,13 +93,13 @@ public class PunishScheduleTask {
         log.info("=== 开始检查处罚到期记录 ===");
         List<DriverPunish> expired = driverPunishMapper.selectList(
                 new LambdaQueryWrapper<DriverPunish>()
-                        .eq(DriverPunish::getStatus, Constants.STATUS_APPROVED)
+                        .eq(DriverPunish::getStatus, Constants.PUNISH_ACTIVE)
                         .le(DriverPunish::getPunishEnd, LocalDateTime.now())
         );
 
         for (DriverPunish p : expired) {
             // 标记处罚已过期
-            p.setStatus(Constants.STATUS_REJECTED);
+            p.setStatus(Constants.PUNISH_EXPIRED);
             driverPunishMapper.updateById(p);
 
             // 恢复司机状态

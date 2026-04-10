@@ -55,13 +55,23 @@ public class CommonController extends BaseController {
         }
 
         String newFilename = UUID.randomUUID().toString().replace("-", "") + suffix;
-        File dir = new File(uploadPath);
+        // 用绝对路径写文件，避免 Tomcat 临时目录问题
+        File dir = new File(uploadPath).getAbsoluteFile();
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
         try {
-            file.transferTo(new File(dir, newFilename));
+            File dest = new File(dir, newFilename);
+            // 用流写入，彻底绕过 MultipartFile.transferTo 的相对路径陷阱
+            try (java.io.InputStream in = file.getInputStream();
+                 java.io.FileOutputStream out = new java.io.FileOutputStream(dest)) {
+                byte[] buf = new byte[4096];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            }
         } catch (IOException e) {
             return Result.error("文件上传失败: " + e.getMessage());
         }

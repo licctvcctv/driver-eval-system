@@ -9,14 +9,15 @@
         <el-table-column prop="orderNo" label="订单号" width="180" show-overflow-tooltip />
         <el-table-column prop="departure" label="出发地" show-overflow-tooltip />
         <el-table-column prop="destination" label="目的地" show-overflow-tooltip />
-        <el-table-column prop="distance" label="距离(km)" width="100">
+        <el-table-column label="距离" width="90" align="center">
           <template #default="{ row }">
-            {{ row.distance ? Number(row.distance).toFixed(1) : '-' }}
+            {{ row.distance ? Number(row.distance).toFixed(1) + ' km' : '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="price" label="费用(元)" width="100">
+        <el-table-column label="费用" width="90" align="center">
           <template #default="{ row }">
-            {{ row.price ? Number(row.price).toFixed(2) : '-' }}
+            <span v-if="row.price" style="color: #F56C6C; font-weight: 600">¥{{ Number(row.price).toFixed(2) }}</span>
+            <span v-else>-</span>
           </template>
         </el-table-column>
         <el-table-column prop="completeTime" label="完成时间" width="170" />

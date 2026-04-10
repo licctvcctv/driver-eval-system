@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.drivereval.common.Result;
 import com.drivereval.entity.Complaint;
+import com.drivereval.entity.DriverInfo;
+import com.drivereval.mapper.DriverInfoMapper;
 import com.drivereval.mapper.OrderInfoMapper;
 import com.drivereval.service.ComplaintService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,9 @@ public class AdminComplaintController extends BaseController {
     @Autowired
     private OrderInfoMapper orderInfoMapper;
 
+    @Autowired
+    private DriverInfoMapper driverInfoMapper;
+
     @GetMapping("/list")
     public Result<?> complaintList(
             @RequestParam(required = false) Integer status,
@@ -50,8 +55,20 @@ public class AdminComplaintController extends BaseController {
             }
         }
 
+        // Batch-fetch driver info to avoid N+1
+        List<Long> driverIds = complaintPage.getRecords().stream()
+                .map(Complaint::getDriverId).filter(id -> id != null).distinct().collect(Collectors.toList());
+        Map<Long, DriverInfo> driverInfoMap = new HashMap<>();
+        if (!driverIds.isEmpty()) {
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<DriverInfo> diWrapper =
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            diWrapper.in(DriverInfo::getUserId, driverIds);
+            driverInfoMapper.selectList(diWrapper).forEach(di -> driverInfoMap.put(di.getUserId(), di));
+        }
+
         List<Map<String, Object>> records = complaintPage.getRecords().stream().map(item -> {
             Map<String, Object> order = orderMap.get(item.getOrderId());
+            DriverInfo driverInfo = driverInfoMap.get(item.getDriverId());
             Map<String, Object> view = new HashMap<>();
             view.put("id", item.getId());
             view.put("orderId", item.getOrderId());
@@ -68,6 +85,10 @@ public class AdminComplaintController extends BaseController {
             view.put("adminRemark", item.getAdminRemark());
             view.put("reviewTime", item.getReviewTime());
             view.put("createTime", item.getCreateTime());
+            view.put("driverScore", driverInfo != null ? driverInfo.getScore() : null);
+            view.put("driverWeekComplaints", driverInfo != null ? driverInfo.getWeekComplaints() : null);
+            view.put("driverTotalComplaints", driverInfo != null ? driverInfo.getTotalComplaints() : null);
+            view.put("driverLevel", driverInfo != null ? driverInfo.getLevel() : null);
             return view;
         }).collect(Collectors.toList());
 

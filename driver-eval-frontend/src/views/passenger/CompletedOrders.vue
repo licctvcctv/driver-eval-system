@@ -7,6 +7,17 @@
         <el-table-column prop="orderNo" label="订单号" min-width="180" show-overflow-tooltip />
         <el-table-column prop="departure" label="出发地" min-width="120" show-overflow-tooltip />
         <el-table-column prop="destination" label="目的地" min-width="120" show-overflow-tooltip />
+        <el-table-column label="距离" width="90" align="center">
+          <template #default="{ row }">
+            {{ row.distance ? Number(row.distance).toFixed(1) + ' km' : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="费用" width="90" align="center">
+          <template #default="{ row }">
+            <span v-if="row.price" style="color: #F56C6C; font-weight: 600">¥{{ Number(row.price).toFixed(2) }}</span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="司机信息" min-width="160">
           <template #default="{ row }">
             <div v-if="row.driverName">

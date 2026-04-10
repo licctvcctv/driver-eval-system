@@ -192,15 +192,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1d1e2c 0%, #4A90D9 50%, #52c41a 100%);
-  background-size: 200% 200%;
-  animation: authGradient 8s ease infinite;
-}
-
-@keyframes authGradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  background: linear-gradient(160deg, #1a1f36 0%, #2b3a67 100%);
 }
 
 .auth-card {

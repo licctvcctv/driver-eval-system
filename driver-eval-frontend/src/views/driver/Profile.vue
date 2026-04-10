@@ -84,6 +84,12 @@
             处罚中 - 无法切换状态
           </el-button>
         </div>
+        <div v-if="showVehicleHint" class="vehicle-hint" style="margin-top: 8px">
+          <el-alert type="warning" :closable="false" show-icon>
+            请先绑定车辆信息再上线。
+            <el-button type="primary" link @click="goToVehicle">前往车辆管理</el-button>
+          </el-alert>
+        </div>
         <div v-if="profile.onlineStatus === 2 && profile.punishEndTime" class="punish-info">
           <el-alert type="error" :closable="false" show-icon>
             处罚结束时间：{{ profile.punishEndTime }}
@@ -113,9 +119,13 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Edit } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 import { getDriverProfile, goOnline, goOffline, updateProfile } from '@/api/user'
+
+const router = useRouter()
+const showVehicleHint = ref(false)
 
 const profile = ref({})
 const loading = ref(false)
@@ -190,6 +200,12 @@ function startPunishCountdown() {
     if (diff <= 0) {
       punishCountdown.value = '已结束'
       clearInterval(countdownTimer)
+      ElNotification({
+        title: '处罚已解除',
+        message: '处罚已解除，您现在可以重新上线',
+        type: 'success',
+        duration: 5000
+      })
       fetchProfile()
       return
     }
@@ -215,15 +231,24 @@ async function fetchProfile() {
 
 async function handleGoOnline() {
   statusLoading.value = true
+  showVehicleHint.value = false
   try {
     await goOnline()
     ElMessage.success('已上线')
     await fetchProfile()
   } catch (e) {
-    ElMessage.error(e.message || '操作失败')
+    const msg = e.message || '操作失败'
+    ElMessage.error(msg)
+    if (msg.includes('绑定车辆')) {
+      showVehicleHint.value = true
+    }
   } finally {
     statusLoading.value = false
   }
+}
+
+function goToVehicle() {
+  router.push('/driver/vehicle')
 }
 
 async function handleGoOffline() {

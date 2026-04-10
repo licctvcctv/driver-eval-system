@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.drivereval.common.Result;
 import com.drivereval.entity.Complaint;
 import com.drivereval.entity.Appeal;
+import com.drivereval.entity.DriverInfo;
 import com.drivereval.mapper.ComplaintMapper;
+import com.drivereval.mapper.DriverInfoMapper;
 import com.drivereval.mapper.OrderInfoMapper;
 import com.drivereval.service.AppealService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,9 @@ public class AdminAppealController extends BaseController {
 
     @Autowired
     private OrderInfoMapper orderInfoMapper;
+
+    @Autowired
+    private DriverInfoMapper driverInfoMapper;
 
     @GetMapping("/list")
     public Result<?> appealList(
@@ -58,9 +63,21 @@ public class AdminAppealController extends BaseController {
             }
         }
 
+        // Batch-fetch driver info
+        List<Long> driverIds = appealPage.getRecords().stream()
+                .map(Appeal::getDriverId).filter(id -> id != null).distinct().collect(Collectors.toList());
+        Map<Long, DriverInfo> driverInfoMap = new HashMap<>();
+        if (!driverIds.isEmpty()) {
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<DriverInfo> diWrapper =
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            diWrapper.in(DriverInfo::getUserId, driverIds);
+            driverInfoMapper.selectList(diWrapper).forEach(di -> driverInfoMap.put(di.getUserId(), di));
+        }
+
         List<Map<String, Object>> records = appealPage.getRecords().stream().map(item -> {
             Complaint complaint = complaintMap.get(item.getComplaintId());
             Map<String, Object> order = complaint != null ? orderMap.get(complaint.getOrderId()) : null;
+            DriverInfo driverInfo = driverInfoMap.get(item.getDriverId());
 
             Map<String, Object> view = new HashMap<>();
             view.put("id", item.getId());
@@ -76,6 +93,14 @@ public class AdminAppealController extends BaseController {
             view.put("adminRemark", item.getAdminRemark());
             view.put("reviewTime", item.getReviewTime());
             view.put("createTime", item.getCreateTime());
+            // Driver context
+            view.put("driverScore", driverInfo != null ? driverInfo.getScore() : null);
+            view.put("driverWeekComplaints", driverInfo != null ? driverInfo.getWeekComplaints() : null);
+            view.put("driverTotalComplaints", driverInfo != null ? driverInfo.getTotalComplaints() : null);
+            view.put("driverOnlineStatus", driverInfo != null ? driverInfo.getOnlineStatus() : null);
+            // Order details
+            view.put("departure", order != null ? order.get("departure") : null);
+            view.put("destination", order != null ? order.get("destination") : null);
             return view;
         }).collect(Collectors.toList());
 

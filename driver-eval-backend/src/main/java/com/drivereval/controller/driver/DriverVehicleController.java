@@ -3,8 +3,10 @@ package com.drivereval.controller.driver;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
+import com.drivereval.entity.OrderInfo;
 import com.drivereval.entity.VehicleInfo;
 import com.drivereval.entity.VehicleType;
+import com.drivereval.mapper.OrderInfoMapper;
 import com.drivereval.mapper.VehicleInfoMapper;
 import com.drivereval.mapper.VehicleTypeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,9 @@ public class DriverVehicleController extends BaseController {
 
     @Autowired
     private VehicleTypeMapper vehicleTypeMapper;
+
+    @Autowired
+    private OrderInfoMapper orderInfoMapper;
 
     @GetMapping("/info")
     public Result<?> getMyVehicle(HttpServletRequest request) {
@@ -94,5 +99,31 @@ public class DriverVehicleController extends BaseController {
             vehicleInfoMapper.insert(vehicle);
             return Result.success("保存成功");
         }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public Result<?> deleteVehicle(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = getUserId(request);
+
+        // Verify the vehicle belongs to the current driver
+        VehicleInfo vehicle = vehicleInfoMapper.selectById(id);
+        if (vehicle == null) {
+            return Result.error("车辆不存在");
+        }
+        if (!vehicle.getDriverId().equals(userId)) {
+            return Result.error("无权操作此车辆");
+        }
+
+        // Check no active orders are using this vehicle (driver has in-progress or dispatched orders)
+        long activeOrderCount = orderInfoMapper.selectCount(
+                new QueryWrapper<OrderInfo>()
+                        .eq("driver_id", userId)
+                        .in("status", Constants.ORDER_DISPATCHING, Constants.ORDER_DISPATCHED, Constants.ORDER_IN_PROGRESS));
+        if (activeOrderCount > 0) {
+            return Result.error("当前有进行中的订单，无法删除车辆");
+        }
+
+        vehicleInfoMapper.deleteById(id);
+        return Result.success("删除成功");
     }
 }

@@ -2,8 +2,11 @@ package com.drivereval.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
+import com.drivereval.entity.DriverInfo;
 import com.drivereval.entity.SysUser;
+import com.drivereval.mapper.DriverInfoMapper;
 import com.drivereval.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +21,9 @@ public class AdminUserController extends BaseController {
 
     @Autowired
     private SysUserMapper sysUserMapper;
+
+    @Autowired
+    private DriverInfoMapper driverInfoMapper;
 
     @GetMapping("/list")
     public Result<?> pageList(
@@ -86,8 +92,24 @@ public class AdminUserController extends BaseController {
             return Result.error("用户不存在");
         }
 
+        // 处罚中的用户不能通过启用/禁用绕过，需走处罚管理解除
+        if (user.getStatus() == Constants.PUNISHED && status == Constants.STATUS_APPROVED) {
+            return Result.error("该用户处于处罚中，请通过处罚管理解除处罚");
+        }
+
         user.setStatus(status);
         sysUserMapper.updateById(user);
+
+        // 同步司机的 DriverInfo 在线状态
+        if (user.getRole() == Constants.ROLE_DRIVER) {
+            DriverInfo driverInfo = driverInfoMapper.selectOne(
+                    new QueryWrapper<DriverInfo>().eq("user_id", userId));
+            if (driverInfo != null && status == 0) {
+                // 禁用时强制下线
+                driverInfo.setOnlineStatus(Constants.OFFLINE);
+                driverInfoMapper.updateById(driverInfo);
+            }
+        }
 
         return Result.success("操作成功");
     }

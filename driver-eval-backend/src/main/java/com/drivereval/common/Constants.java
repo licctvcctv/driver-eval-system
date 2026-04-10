@@ -30,4 +30,12 @@ public class Constants {
     public static final int STATUS_PENDING = 0;
     public static final int STATUS_APPROVED = 1;
     public static final int STATUS_REJECTED = 2;
+
+    // ---- 处罚状态 ----
+    public static final int PUNISH_ACTIVE = 1;
+    public static final int PUNISH_EXPIRED = 2;
+
+    // ---- 计价规则 ----
+    public static final double PRICE_BASE = 5.0;       // 起步价（元）
+    public static final double PRICE_PER_KM = 2.5;     // 每公里费用（元）
 }

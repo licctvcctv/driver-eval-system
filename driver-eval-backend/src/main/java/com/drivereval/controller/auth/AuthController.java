@@ -128,6 +128,7 @@ public class AuthController {
         user.setRealName(realName != null ? realName : "");
         user.setPhone(phone != null ? phone : "");
         user.setRole(role);
+        // Demo: auto-approve. Production should use STATUS_PENDING + admin approval
         user.setStatus(Constants.STATUS_APPROVED);
         if (idCardImg != null) {
             user.setIdCardImg(idCardImg);

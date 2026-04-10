@@ -52,12 +52,14 @@ public class DriverComplaintController extends BaseController {
             long appealCount = appealMapper.selectCount(
                     new QueryWrapper<Appeal>().eq("complaint_id", item.getId()));
 
+            boolean anonymous = item.getIsAnonymous() != null && item.getIsAnonymous() == 1;
+
             Map<String, Object> view = new HashMap<>();
             view.put("id", item.getId());
             view.put("orderId", item.getOrderId());
             view.put("orderNo", order != null ? order.get("orderNo") : null);
-            view.put("passengerId", item.getPassengerId());
-            view.put("passengerName", order != null ? order.get("passengerName") : null);
+            view.put("passengerId", anonymous ? null : item.getPassengerId());
+            view.put("passengerName", anonymous ? "匿名用户" : (order != null ? order.get("passengerName") : null));
             view.put("driverId", item.getDriverId());
             view.put("driverName", order != null ? order.get("driverName") : null);
             view.put("content", item.getContent());

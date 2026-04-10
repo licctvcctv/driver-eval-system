@@ -20,6 +20,7 @@
                 placeholder="输入出发地，如：北京西站"
                 value-key="name"
                 :trigger-on-focus="true"
+                :debounce="0"
                 style="width: 100%"
                 @select="handleSelectDeparture"
                 @input="handleDepartureInput"
@@ -30,7 +31,10 @@
                 <template #default="{ item }">
                   <div class="location-item">
                     <el-icon><Location /></el-icon>
-                    <span>{{ item.name }}</span>
+                    <div>
+                      <div>{{ item.name }}</div>
+                      <div v-if="item.address" class="location-address">{{ item.address }}</div>
+                    </div>
                   </div>
                 </template>
               </el-autocomplete>
@@ -53,7 +57,10 @@
                 <template #default="{ item }">
                   <div class="location-item">
                     <el-icon><Location /></el-icon>
-                    <span>{{ item.name }}</span>
+                    <div>
+                      <div>{{ item.name }}</div>
+                      <div v-if="item.address" class="location-address">{{ item.address }}</div>
+                    </div>
                   </div>
                 </template>
               </el-autocomplete>
@@ -81,7 +88,10 @@
               </div>
               <div class="route-line">
                 <div class="route-dash"></div>
-                <span class="route-distance">约 {{ estimatedDistance }} km</span>
+                <div class="route-info">
+                  <span class="route-distance">约 {{ estimatedDistance }} km</span>
+                  <span v-if="estimatedPrice > 0" class="route-price">预估 ¥{{ estimatedPrice }}</span>
+                </div>
                 <div class="route-dash"></div>
               </div>
               <div class="route-point">
@@ -130,7 +140,13 @@
                 {{ levelText(dispatchResult.driverLevel) }}
               </el-tag>
             </div>
-            <el-descriptions :column="1" border style="margin-top: 16px" size="small">
+            <el-descriptions :column="2" border style="margin-top: 16px" size="small">
+              <el-descriptions-item label="距离">
+                <span style="font-weight: 700; color: #4A90D9">{{ dispatchResult.distance || estimatedDistance }} km</span>
+              </el-descriptions-item>
+              <el-descriptions-item label="预估费用">
+                <span style="font-weight: 700; color: #F56C6C; font-size: 15px">¥{{ dispatchResult.price || estimatedPrice }}</span>
+              </el-descriptions-item>
               <el-descriptions-item label="车辆">
                 {{ dispatchResult.vehicleInfo || '未知车辆' }}
               </el-descriptions-item>
@@ -139,7 +155,7 @@
                   {{ dispatchResult.plateNumber || '未知' }}
                 </span>
               </el-descriptions-item>
-              <el-descriptions-item label="订单号">
+              <el-descriptions-item label="订单号" :span="2">
                 <span style="font-family: monospace; font-size: 12px">{{ dispatchResult.orderNo }}</span>
               </el-descriptions-item>
             </el-descriptions>
@@ -147,11 +163,41 @@
 
           <template v-else>
             <div style="text-align: center; padding: 20px 0">
-              <p style="color: #909399; margin-bottom: 16px">当前没有空闲司机，请稍后再试</p>
-              <el-button type="primary" @click="handleSubmit">
-                <el-icon style="margin-right: 4px"><Refresh /></el-icon>
-                重新叫车
-              </el-button>
+              <p style="color: #909399; margin-bottom: 16px">当前没有空闲司机</p>
+
+              <!-- Auto-retry countdown -->
+              <div v-if="retryCountdown > 0 && retryCount < maxRetries" style="margin-bottom: 16px">
+                <el-progress
+                  :percentage="(retryCountdown / retryInterval) * 100"
+                  :format="() => retryCountdown + 's'"
+                  :stroke-width="10"
+                  style="max-width: 300px; margin: 0 auto 12px"
+                />
+                <p style="color: #606266; font-size: 13px">
+                  系统将在 <span style="color: #E6A23C; font-weight: 700">{{ retryCountdown }}秒</span> 后自动重新匹配
+                  <span style="color: #909399; margin-left: 4px">(第 {{ retryCount + 1 }}/{{ maxRetries }} 次)</span>
+                </p>
+              </div>
+
+              <!-- Max retries reached -->
+              <div v-if="retryCount >= maxRetries" style="margin-bottom: 16px">
+                <p style="color: #F56C6C; font-size: 13px; font-weight: 500">
+                  已自动重试 {{ maxRetries }} 次仍无可用司机，建议稍后再试或取消订单
+                </p>
+              </div>
+
+              <div style="display: flex; justify-content: center; gap: 12px">
+                <el-button type="primary" @click="manualRetry" :loading="submitting">
+                  <el-icon style="margin-right: 4px"><Refresh /></el-icon>
+                  {{ retryCount > 0 ? '再次重试' : '重新叫车' }}
+                </el-button>
+                <el-button v-if="retryCountdown > 0" @click="cancelAutoRetry">
+                  取消自动重试
+                </el-button>
+                <el-button v-if="retryCount >= maxRetries" type="info" @click="resetForm">
+                  取消叫车
+                </el-button>
+              </div>
             </div>
           </template>
         </el-card>
@@ -177,31 +223,39 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
-import { createOrder } from '@/api/order'
+import { createOrder, getOrders } from '@/api/order'
 import { Promotion, Location, Refresh, InfoFilled, SuccessFilled, WarningFilled } from '@element-plus/icons-vue'
 
 const formRef = ref(null)
 const submitting = ref(false)
 const dispatchResult = ref(null)
 
-const locations = [
-  { name: '北京西站', lat: 39.8959, lng: 116.3228 },
-  { name: '北京南站', lat: 39.8652, lng: 116.3789 },
-  { name: '北京站', lat: 39.9028, lng: 116.4271 },
-  { name: '天安门', lat: 39.9087, lng: 116.3975 },
-  { name: '中关村', lat: 39.9818, lng: 116.3117 },
-  { name: '望京SOHO', lat: 39.9977, lng: 116.4802 },
-  { name: '三里屯', lat: 39.9317, lng: 116.4551 },
-  { name: '国贸CBD', lat: 39.9087, lng: 116.4605 },
-  { name: '五道口', lat: 39.9926, lng: 116.3381 },
-  { name: '西单', lat: 39.9132, lng: 116.3752 },
-  { name: '王府井', lat: 39.9149, lng: 116.4107 },
-  { name: '颐和园', lat: 39.9998, lng: 116.2754 },
-  { name: '北京大学', lat: 39.9869, lng: 116.3059 },
-  { name: '首都机场T3', lat: 40.0799, lng: 116.6031 },
-  { name: '大兴机场', lat: 39.5098, lng: 116.4105 },
+// Track the created order to avoid duplicates on retry
+const createdOrderId = ref(null)
+const createdOrderNo = ref(null)
+
+// Auto-retry state
+const retryCount = ref(0)
+const retryCountdown = ref(0)
+const maxRetries = 3
+const retryInterval = 30
+let countdownTimer = null
+
+// 高德地图 Web 服务 Key（用于 POI 搜索）
+const AMAP_WEB_KEY = 'bcafb11917e1c0c24268fa0e3c69aa5b'
+
+// 热门地点（输入为空时展示，同时作为高德 API 不可用时的兜底）
+const hotLocations = [
+  { name: '北京西站', lat: 39.8959, lng: 116.3228, address: '北京市丰台区' },
+  { name: '北京南站', lat: 39.8652, lng: 116.3789, address: '北京市丰台区' },
+  { name: '天安门', lat: 39.9087, lng: 116.3975, address: '北京市东城区' },
+  { name: '中关村', lat: 39.9818, lng: 116.3117, address: '北京市海淀区' },
+  { name: '望京SOHO', lat: 39.9977, lng: 116.4802, address: '北京市朝阳区' },
+  { name: '三里屯', lat: 39.9317, lng: 116.4551, address: '北京市朝阳区' },
+  { name: '国贸CBD', lat: 39.9087, lng: 116.4605, address: '北京市朝阳区' },
+  { name: '首都机场T3', lat: 40.0799, lng: 116.6031, address: '北京市顺义区' },
 ]
 
 const form = reactive({
@@ -222,22 +276,52 @@ const rules = {
   destLat: [{ required: true, message: '请选择目的地', trigger: 'change' }]
 }
 
-const filterLocations = (query, cb) => {
-  const results = query
-    ? locations.filter(loc => loc.name.toLowerCase().includes(query.toLowerCase()))
-    : locations
-  cb(results)
+// 调用高德 POI 搜索 API（每个输入框独立防抖）
+const searchTimers = { departure: null, destination: null }
+const createSearchPoi = (field) => (keyword, cb) => {
+  if (!keyword || keyword.trim().length === 0) {
+    cb(hotLocations)
+    return
+  }
+  clearTimeout(searchTimers[field])
+  searchTimers[field] = setTimeout(async () => {
+    try {
+      const res = await fetch(
+        `https://restapi.amap.com/v3/place/text?key=${AMAP_WEB_KEY}&keywords=${encodeURIComponent(keyword)}&city=北京&offset=10&page=1&extensions=all&output=JSON`
+      )
+      const data = await res.json()
+      if (data.status === '1' && Array.isArray(data.pois) && data.pois.length > 0) {
+        const results = data.pois.map(poi => {
+          const [lngStr, latStr] = (poi.location || '').split(',')
+          return {
+            name: poi.name,
+            address: `${poi.cityname || ''}${poi.adname || ''}${poi.address || ''}`,
+            lat: parseFloat(latStr) || 0,
+            lng: parseFloat(lngStr) || 0
+          }
+        })
+        cb(results)
+      } else {
+        // API 无结果时用本地热门过滤
+        const fallback = hotLocations.filter(loc => loc.name.includes(keyword))
+        cb(fallback.length > 0 ? fallback : [])
+      }
+    } catch (e) {
+      // 网络异常时用本地热门兜底
+      const fallback = hotLocations.filter(loc => loc.name.includes(keyword))
+      cb(fallback.length > 0 ? fallback : hotLocations)
+    }
+  }, 300)
 }
 
-const queryDeparture = (query, cb) => filterLocations(query, cb)
-const queryDestination = (query, cb) => filterLocations(query, cb)
+const queryDeparture = createSearchPoi('departure')
+const queryDestination = createSearchPoi('destination')
 
 const handleSelectDeparture = (loc) => {
   form.departure = loc.name
   form.departureLat = String(loc.lat)
   form.departureLng = String(loc.lng)
 }
-// 用户手动改出发地文本时清除坐标，强制重新选择
 const handleDepartureInput = () => {
   form.departureLat = ''
   form.departureLng = ''
@@ -264,6 +348,13 @@ const estimatedDistance = computed(() => {
     Math.sin(dLng/2)**2
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
   return (R * c).toFixed(1)
+})
+
+// 预估价格：起步价5元 + 每公里2.5元
+const estimatedPrice = computed(() => {
+  const dist = parseFloat(estimatedDistance.value)
+  if (!dist) return 0
+  return (5 + dist * 2.5).toFixed(2)
 })
 
 const getLevelTagType = (level) => {
@@ -303,6 +394,9 @@ const handleSubmit = async () => {
       destLat: parseFloat(form.destLat)
     })
     const data = res.data || res
+    // Store order identifiers for retry polling
+    createdOrderId.value = data.orderId || data.id || null
+    createdOrderNo.value = data.orderNo || null
     if (data.driverId || data.driverName || data.driverLevel != null) {
       dispatchResult.value = {
         driverAssigned: true,
@@ -311,12 +405,18 @@ const handleSubmit = async () => {
         driverLevel: data.driverLevel || data.level || '普通',
         vehicleInfo: data.vehicleInfo || data.vehicleBrand || data.vehicleTypeName || '未知车辆',
         plateNumber: data.plateNumber || data.vehiclePlateNumber || '未知',
-        orderNo: data.orderNo || ''
+        orderNo: data.orderNo || '',
+        distance: data.distance || null,
+        price: data.price || null
       }
       ElMessage.success('叫车成功，已为您分配司机！')
     } else {
       dispatchResult.value = { driverAssigned: false }
       ElMessage.warning('暂无可用司机，请稍后再试')
+      // Start auto-retry countdown if under max retries
+      if (retryCount.value < maxRetries) {
+        startRetryCountdown()
+      }
     }
   } catch (e) {
     ElMessage.error(e.message || '下单失败，请稍后重试')
@@ -325,10 +425,115 @@ const handleSubmit = async () => {
   }
 }
 
+// Poll existing order status instead of creating a new one on retry
+async function pollExistingOrder() {
+  submitting.value = true
+  try {
+    // Query all statuses to detect auto-cancellation by backend
+    const res = await getOrders({ statusList: '0,1,2,3,4,5,6', pageNum: 1, pageSize: 50 })
+    const data = res.data || res
+    const list = data.records || data.list || []
+    // Find the order we created by ID or orderNo
+    const match = list.find(o =>
+      (createdOrderId.value && (o.id === createdOrderId.value || o.orderId === createdOrderId.value)) ||
+      (createdOrderNo.value && o.orderNo === createdOrderNo.value)
+    )
+    if (match && (Number(match.status) === 1 || Number(match.status) === 3) && match.driverName) {
+      // Driver has been assigned
+      dispatchResult.value = {
+        driverAssigned: true,
+        driverName: match.driverName || '未知',
+        driverScore: match.driverScore || match.score || 5,
+        driverLevel: match.driverLevel || match.level || '普通',
+        vehicleInfo: match.vehicleInfo || match.vehicleBrand || match.vehicleTypeName || '未知车辆',
+        plateNumber: match.plateNumber || match.vehiclePlateNumber || '未知',
+        orderNo: match.orderNo || '',
+        distance: match.distance || null,
+        price: match.price || null
+      }
+      createdOrderId.value = null
+      createdOrderNo.value = null
+      ElMessage.success('已为您分配司机！')
+    } else if (match && Number(match.status) >= 4) {
+      // Order was auto-cancelled by backend (e.g. 10min timeout) or otherwise terminated
+      clearCountdown()
+      createdOrderId.value = null
+      createdOrderNo.value = null
+      dispatchResult.value = null
+      ElMessage.warning('该订单已被系统自动取消（长时间未匹配到司机），请重新下单')
+    } else {
+      // Still not dispatched
+      dispatchResult.value = { driverAssigned: false }
+      ElMessage.info('仍在匹配中，系统将继续为您寻找司机')
+      if (retryCount.value < maxRetries) {
+        startRetryCountdown()
+      }
+    }
+  } catch (e) {
+    dispatchResult.value = { driverAssigned: false }
+    ElMessage.warning('查询订单状态失败，将继续重试')
+    if (retryCount.value < maxRetries) {
+      startRetryCountdown()
+    }
+  } finally {
+    submitting.value = false
+  }
+}
+
+function startRetryCountdown() {
+  clearCountdown()
+  retryCountdown.value = retryInterval
+  countdownTimer = setInterval(() => {
+    retryCountdown.value--
+    if (retryCountdown.value <= 0) {
+      clearCountdown()
+      retryCount.value++
+      // Poll existing order instead of creating a new one
+      if (createdOrderId.value || createdOrderNo.value) {
+        pollExistingOrder()
+      } else {
+        handleSubmit()
+      }
+    }
+  }, 1000)
+}
+
+function clearCountdown() {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+    countdownTimer = null
+  }
+  retryCountdown.value = 0
+}
+
+function manualRetry() {
+  clearCountdown()
+  retryCount.value++
+  // Poll existing order instead of creating a new one
+  if (createdOrderId.value || createdOrderNo.value) {
+    pollExistingOrder()
+  } else {
+    handleSubmit()
+  }
+}
+
+function cancelAutoRetry() {
+  clearCountdown()
+  ElMessage.info('已取消自动重试')
+}
+
 const resetForm = () => {
+  clearCountdown()
+  retryCount.value = 0
+  createdOrderId.value = null
+  createdOrderNo.value = null
   formRef.value?.resetFields()
   dispatchResult.value = null
 }
+
+onBeforeUnmount(() => {
+  clearCountdown()
+})
 </script>
 
 <style scoped>
@@ -343,9 +548,14 @@ const resetForm = () => {
 
 .location-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 4px 0;
+}
+.location-address {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 2px;
 }
 
 .route-summary {
@@ -373,10 +583,22 @@ const resetForm = () => {
   height: 1px;
   border-top: 2px dashed #dcdfe6;
 }
+.route-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
 .route-distance {
   font-size: 13px;
   color: #4A90D9;
   font-weight: 600;
+  white-space: nowrap;
+}
+.route-price {
+  font-size: 14px;
+  color: #F56C6C;
+  font-weight: 700;
   white-space: nowrap;
 }
 

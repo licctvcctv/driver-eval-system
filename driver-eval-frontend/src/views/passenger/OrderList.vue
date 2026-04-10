@@ -3,10 +3,27 @@
     <h2>乘车订单</h2>
 
     <el-card shadow="hover">
+      <template #header>
+        <div style="display: flex; justify-content: flex-end; align-items: center;">
+          <span v-if="lastRefreshTime" style="font-size: 12px; color: #909399; margin-right: 8px">最后刷新: {{ lastRefreshTime }}</span>
+        </div>
+      </template>
+
       <el-table :data="orders" v-loading="loading" stripe border style="width: 100%">
         <el-table-column prop="orderNo" label="订单号" min-width="180" show-overflow-tooltip />
         <el-table-column prop="departure" label="出发地" min-width="120" show-overflow-tooltip />
         <el-table-column prop="destination" label="目的地" min-width="120" show-overflow-tooltip />
+        <el-table-column label="距离" width="90" align="center">
+          <template #default="{ row }">
+            {{ row.distance ? Number(row.distance).toFixed(1) + ' km' : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="费用" width="90" align="center">
+          <template #default="{ row }">
+            <span v-if="row.price" style="color: #F56C6C; font-weight: 600">¥{{ Number(row.price).toFixed(2) }}</span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="订单状态" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="statusTagType(row.status)">{{ statusText(row.status) }}</el-tag>
@@ -132,8 +149,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ElMessage, ElNotification } from 'element-plus'
 import { getOrders, cancelOrder } from '@/api/order'
 
 const loading = ref(false)
@@ -150,9 +167,23 @@ const currentCancelOrder = ref(null)
 const driverDialogVisible = ref(false)
 const selectedDriver = ref(null)
 
+// Polling state
+const lastRefreshTime = ref('')
+let pollingTimer = null
+let previousStatusMap = new Map()
+
+function formatTime(date) {
+  const h = String(date.getHours()).padStart(2, '0')
+  const m = String(date.getMinutes()).padStart(2, '0')
+  const s = String(date.getSeconds()).padStart(2, '0')
+  return `${h}:${m}:${s}`
+}
+
 const statusText = (status) => {
   const s = Number(status)
-  const map = { 0: '待派单', 1: '已派单', 2: '已接单', 3: '进行中', 4: '已完成', 5: '乘客取消', 6: '司机取消' }
+  // Note: status 2 ("已接单") is reserved but currently unused in the demo flow.
+  // Accept goes directly to IN_PROGRESS (3). Kept here for future two-step accept flow.
+  const map = { 0: '待派单', 1: '已派单', 2: '已接单(预留)', 3: '进行中', 4: '已完成', 5: '乘客取消', 6: '司机取消' }
   return map[s] || status || '未知'
 }
 
@@ -183,21 +214,118 @@ const showDriverDetail = (row) => {
   driverDialogVisible.value = true
 }
 
-const loadOrders = async () => {
-  loading.value = true
+function getStatusChangeMessage(oldStatus, newStatus) {
+  const o = Number(oldStatus)
+  const n = Number(newStatus)
+  if (o === 0 && n === 1) return '订单已派单，正在等待司机接单'
+  if ((o === 0 || o === 1) && n === 2) return '司机已接单'
+  if ((o === 1 || o === 2) && n === 3) return '司机已接单，行程开始'
+  if (n === 3 && o !== 3) return '行程进行中'
+  if (n === 4) return '行程已完成'
+  if (n === 6) return '司机已取消订单'
+  return null
+}
+
+function getStatusChangeType(newStatus) {
+  const n = Number(newStatus)
+  if (n === 3 || n === 2) return 'success'
+  if (n === 4) return 'success'
+  if (n === 6) return 'warning'
+  return 'info'
+}
+
+const loadOrders = async (isPolling = false) => {
+  if (!isPolling) {
+    loading.value = true
+  }
   try {
+    // Poll all statuses to catch terminal transitions; display only active ones
+    const trackedIds = isPolling ? [...previousStatusMap.keys()] : []
     const res = await getOrders({
       statusList: '0,1,2,3',
       pageNum: pageNum.value,
       pageSize: pageSize.value
     })
     const data = res.data || res
-    orders.value = data.records || data.list || []
+    const newList = data.records || data.list || []
+
+    // Detect status changes on polling
+    if (isPolling && previousStatusMap.size > 0) {
+      // Check orders still in the active list for status changes
+      for (const order of newList) {
+        const prevStatus = previousStatusMap.get(order.id)
+        if (prevStatus !== undefined && Number(prevStatus) !== Number(order.status)) {
+          const msg = getStatusChangeMessage(prevStatus, order.status)
+          if (msg) {
+            ElNotification({
+              title: '订单状态更新',
+              message: `订单 ${order.orderNo || ''}: ${msg}`,
+              type: getStatusChangeType(order.status),
+              duration: 5000
+            })
+          }
+        }
+      }
+      // Detect orders that disappeared from active list (went to terminal state 4/5/6)
+      const currentIds = new Set(newList.map(o => o.id))
+      for (const trackedId of trackedIds) {
+        if (!currentIds.has(trackedId)) {
+          // Order disappeared — fetch its current state to notify
+          try {
+            const detailRes = await getOrders({ statusList: '0,1,2,3,4,5,6', pageNum: 1, pageSize: 50 })
+            const detailData = detailRes.data || detailRes
+            const detailList = detailData.records || detailData.list || []
+            const gone = detailList.find(o => o.id === trackedId)
+            if (gone) {
+              const prevStatus = previousStatusMap.get(trackedId)
+              const msg = getStatusChangeMessage(prevStatus, gone.status)
+              if (msg) {
+                ElNotification({
+                  title: '订单状态更新',
+                  message: `订单 ${gone.orderNo || ''}: ${msg}`,
+                  type: getStatusChangeType(gone.status),
+                  duration: 6000
+                })
+              }
+            }
+          } catch (_) { /* ignore */ }
+          // Only need one extra fetch for all disappeared orders
+          break
+        }
+      }
+    }
+
+    // Update status map from active orders only
+    previousStatusMap = new Map()
+    for (const order of newList) {
+      previousStatusMap.set(order.id, order.status)
+    }
+
+    orders.value = newList
     total.value = data.total || 0
+    lastRefreshTime.value = formatTime(new Date())
   } catch (e) {
-    ElMessage.error('加载订单失败')
+    if (!isPolling) {
+      ElMessage.error('加载订单失败')
+    }
   } finally {
-    loading.value = false
+    if (!isPolling) {
+      loading.value = false
+    }
+  }
+}
+
+function startPolling() {
+  stopPolling()
+  pollingTimer = setInterval(() => {
+    loadOrders(true)
+  }, 10000)
+}
+
+function stopPolling() {
+  if (pollingTimer) {
+    clearInterval(pollingTimer)
+    pollingTimer = null
   }
 }
 
@@ -225,8 +353,24 @@ const confirmCancel = async () => {
   }
 }
 
+function handleVisibilityChange() {
+  if (document.hidden) {
+    stopPolling()
+  } else {
+    loadOrders(true)
+    startPolling()
+  }
+}
+
 onMounted(() => {
   loadOrders()
+  startPolling()
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onBeforeUnmount(() => {
+  stopPolling()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>
 

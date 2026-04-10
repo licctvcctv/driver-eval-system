@@ -81,7 +81,7 @@ public class AdminPunishController extends BaseController {
             item.put("punishEnd", punish.getPunishEnd());
             item.put("weekComplaints", punish.getWeekComplaints());
             item.put("statusCode", punish.getStatus());
-            item.put("status", punish.getStatus() != null && punish.getStatus() == 1 ? "生效中" : "已过期");
+            item.put("status", punish.getStatus() != null && punish.getStatus() == Constants.PUNISH_ACTIVE ? "生效中" : "已过期");
             item.put("createTime", punish.getCreateTime());
             item.put("updateTime", punish.getUpdateTime());
             records.add(item);
@@ -117,7 +117,7 @@ public class AdminPunishController extends BaseController {
         punish.setPunishDays(days);
         punish.setPunishStart(LocalDateTime.now());
         punish.setPunishEnd(LocalDateTime.now().plusDays(days));
-        punish.setStatus(Constants.STATUS_APPROVED); // active
+        punish.setStatus(Constants.PUNISH_ACTIVE);
         punish.setWeekComplaints(driverInfo.getWeekComplaints() != null ? driverInfo.getWeekComplaints() : 0);
         driverPunishMapper.insert(punish);
 
@@ -142,10 +142,10 @@ public class AdminPunishController extends BaseController {
 
         DriverPunish punish = driverPunishMapper.selectById(punishId);
         if (punish == null) return Result.error("处罚记录不存在");
-        if (punish.getStatus() != Constants.STATUS_APPROVED) return Result.error("该处罚已过期");
+        if (punish.getStatus() != Constants.PUNISH_ACTIVE) return Result.error("该处罚已过期");
 
         // Mark punishment as expired
-        punish.setStatus(Constants.STATUS_REJECTED);
+        punish.setStatus(Constants.PUNISH_EXPIRED);
         driverPunishMapper.updateById(punish);
 
         // Restore driver status
@@ -172,10 +172,10 @@ public class AdminPunishController extends BaseController {
         }
         String value = status.trim();
         if ("生效中".equals(value)) {
-            return 1;
+            return Constants.PUNISH_ACTIVE;
         }
         if ("已过期".equals(value)) {
-            return 2;
+            return Constants.PUNISH_EXPIRED;
         }
         try {
             return Integer.valueOf(value);
