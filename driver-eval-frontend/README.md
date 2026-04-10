@@ -1,5 +1,20 @@
-# Vue 3 + Vite
+# 网约车平台司机评价信息管理系统 - 前端
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+基于 Vue 3 + Element Plus + Vite + ECharts 的前端项目。
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## 启动
+
+```bash
+npm install
+npm run dev
+```
+
+前端默认运行在 http://localhost:5173，自动代理 `/api` 到后端 `http://localhost:8088`。
+
+## 技术栈
+
+- Vue 3 + Composition API
+- Element Plus 组件库
+- ECharts + echarts-wordcloud 图表
+- Vue Router 路由
+- Axios HTTP 客户端

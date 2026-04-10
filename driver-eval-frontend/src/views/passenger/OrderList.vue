@@ -33,7 +33,7 @@
         <el-table-column label="操作" width="100" align="center" fixed="right">
           <template #default="{ row }">
             <el-button
-              v-if="row.status === 0 || row.status === 1"
+              v-if="Number(row.status) < 4"
               type="danger"
               size="small"
               link
@@ -151,13 +151,15 @@ const driverDialogVisible = ref(false)
 const selectedDriver = ref(null)
 
 const statusText = (status) => {
-  const map = { 0: '待接单', 1: '已接单', 2: '进行中', 3: '待确认' }
-  return map[status] || '未知'
+  const s = Number(status)
+  const map = { 0: '待派单', 1: '已派单', 2: '已接单', 3: '进行中', 4: '已完成', 5: '乘客取消', 6: '司机取消' }
+  return map[s] || status || '未知'
 }
 
 const statusTagType = (status) => {
-  const map = { 0: 'info', 1: 'warning', 2: '', 3: 'success' }
-  return map[status] || 'info'
+  const s = Number(status)
+  const map = { 0: 'info', 1: 'warning', 2: '', 3: 'primary', 4: 'success', 5: 'danger', 6: 'danger' }
+  return map[s] || 'info'
 }
 
 const levelTagType = (level) => {

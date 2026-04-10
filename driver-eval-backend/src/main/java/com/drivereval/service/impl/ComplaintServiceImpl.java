@@ -88,6 +88,9 @@ public class ComplaintServiceImpl extends ServiceImpl<ComplaintMapper, Complaint
         if (complaint.getStatus() != Constants.STATUS_PENDING) {
             throw new BusinessException("该投诉已审核");
         }
+        if (status != Constants.STATUS_APPROVED && status != Constants.STATUS_REJECTED) {
+            throw new BusinessException("审核状态只能为通过或驳回");
+        }
 
         complaint.setStatus(status);
         complaint.setAdminRemark(remark);

@@ -99,10 +99,11 @@ public class AdminOrderController extends BaseController {
         }
         switch (status) {
             case 0:
-                return "待接单";
+                return "待派单";
             case 1:
-                return "已接单";
+                return "已派单";
             case 2:
+                return "已接单";
             case 3:
                 return "进行中";
             case 4:

@@ -85,6 +85,9 @@ public class AppealServiceImpl extends ServiceImpl<AppealMapper, Appeal> impleme
         if (appeal.getStatus() != Constants.STATUS_PENDING) {
             throw new BusinessException("该申诉已审核");
         }
+        if (status != Constants.STATUS_APPROVED && status != Constants.STATUS_REJECTED) {
+            throw new BusinessException("审核状态只能为通过或驳回");
+        }
 
         appeal.setStatus(status);
         appeal.setAdminRemark(remark);

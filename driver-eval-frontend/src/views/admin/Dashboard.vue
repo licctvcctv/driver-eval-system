@@ -62,9 +62,9 @@ const statCards = computed(() => [
 
 const quickActions = [
   { label: '用户管理', path: '/admin/users', color: '#4A90D9', icon: User },
-  { label: '订单管理', path: '/admin/orders', color: '#52c41a', icon: Tickets },
-  { label: '投诉处理', path: '/admin/complaints', color: '#E6A23C', icon: ChatLineSquare },
-  { label: '数据统计', path: '/admin/stats', color: '#9b59b6', icon: DataAnalysis },
+  { label: '订单管理', path: '/admin/order/dispatch', color: '#52c41a', icon: Tickets },
+  { label: '投诉处理', path: '/admin/complaint', color: '#E6A23C', icon: ChatLineSquare },
+  { label: '数据统计', path: '/admin/tag-stats', color: '#9b59b6', icon: DataAnalysis },
 ]
 
 const loadStats = async () => {

@@ -19,9 +19,9 @@
         o.dispatch_score AS dispatchScore,
         o.status AS status,
         CASE o.status
-            WHEN 0 THEN '待接单'
-            WHEN 1 THEN '已接单'
-            WHEN 2 THEN '进行中'
+            WHEN 0 THEN '待派单'
+            WHEN 1 THEN '已派单'
+            WHEN 2 THEN '已接单'
             WHEN 3 THEN '进行中'
             WHEN 4 THEN '已完成'
             WHEN 5 THEN '乘客取消'
