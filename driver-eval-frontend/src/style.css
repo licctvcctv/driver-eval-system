@@ -7,8 +7,10 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 0.2px;
   color: #333;
-  background-color: #f5f7fa;
+  background-color: #f0f2f5;
 }
 
 #app {
@@ -17,17 +19,20 @@ body {
 }
 
 .page-container {
-  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 28px;
 }
 
 .page-container h2 {
-  margin-bottom: 20px;
-  font-size: 20px;
-  font-weight: 600;
-  color: #303133;
+  margin-bottom: 24px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1e2c;
+  letter-spacing: 0.5px;
 }
 
-/* Layout styles */
+/* Layout */
 .layout-container {
   display: flex;
   min-height: 100vh;
@@ -35,25 +40,44 @@ body {
 
 .layout-sidebar {
   width: 220px;
-  background-color: #304156;
+  background: linear-gradient(180deg, #1d1e2c 0%, #2b2d42 100%);
   min-height: 100vh;
   flex-shrink: 0;
 }
 
 .layout-sidebar .logo {
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   font-size: 18px;
-  font-weight: 600;
-  background-color: #263445;
-  letter-spacing: 2px;
+  font-weight: 700;
+  background: rgba(0,0,0,0.15);
+  letter-spacing: 3px;
 }
 
 .layout-sidebar .el-menu {
   border-right: none;
+  background: transparent;
+}
+
+.layout-sidebar .el-menu-item,
+.layout-sidebar .el-sub-menu__title {
+  color: rgba(255,255,255,0.7);
+  transition: all 0.25s ease;
+}
+
+.layout-sidebar .el-menu-item:hover,
+.layout-sidebar .el-sub-menu__title:hover {
+  color: #fff;
+  background: rgba(74,144,217,0.2);
+}
+
+.layout-sidebar .el-menu-item.is-active {
+  color: #fff;
+  background: linear-gradient(90deg, #4A90D9 0%, rgba(74,144,217,0.4) 100%);
+  border-right: 3px solid #4A90D9;
 }
 
 .layout-main-wrapper {
@@ -69,8 +93,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 0 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   z-index: 10;
 }
 
@@ -83,36 +107,116 @@ body {
 .layout-header .user-info span {
   font-size: 14px;
   color: #606266;
+  font-weight: 500;
 }
 
 .layout-content {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
+  background: #f0f2f5;
 }
 
-/* Login / Register pages */
+/* Cards */
+.el-card {
+  border-radius: 10px !important;
+  border: none !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.el-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Tables */
+.el-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.el-table th.el-table__cell {
+  background-color: #f8f9fc !important;
+  color: #1d1e2c;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.el-table tr:nth-child(even) td.el-table__cell {
+  background-color: #fafbfd;
+}
+
+.el-table tr:hover > td.el-table__cell {
+  background-color: #eef3fc !important;
+}
+
+/* Buttons */
+.el-button {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+
+.el-button--primary {
+  background-color: #4A90D9;
+  border-color: #4A90D9;
+}
+
+.el-button--primary:hover,
+.el-button--primary:focus {
+  background-color: #3a7bc8;
+  border-color: #3a7bc8;
+}
+
+.el-button--success {
+  background-color: #52c41a;
+  border-color: #52c41a;
+}
+
+.el-button--success:hover,
+.el-button--success:focus {
+  background-color: #45a817;
+  border-color: #45a817;
+}
+
+/* Tags */
+.el-tag {
+  border-radius: 4px;
+}
+
+/* Auth pages */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1d1e2c 0%, #4A90D9 50%, #52c41a 100%);
+  background-size: 200% 200%;
+  animation: authGradient 8s ease infinite;
+}
+
+@keyframes authGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .auth-card {
   width: 420px;
-  padding: 40px;
+  padding: 44px 40px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
 }
 
 .auth-card h2 {
   text-align: center;
-  margin-bottom: 30px;
-  color: #303133;
-  font-size: 24px;
+  margin-bottom: 32px;
+  color: #1d1e2c;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
 .auth-card .el-form-item {
@@ -121,15 +225,33 @@ body {
 
 .auth-card .auth-btn {
   width: 100%;
+  height: 42px;
+  font-size: 15px;
 }
 
 .auth-card .auth-footer {
   text-align: center;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .auth-card .auth-footer a {
-  color: #409eff;
+  color: #4A90D9;
   text-decoration: none;
   cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.auth-card .auth-footer a:hover {
+  color: #3a7bc8;
+}
+
+/* Pagination */
+.el-pagination {
+  margin-top: 16px;
+}
+
+/* Dialog */
+.el-dialog {
+  border-radius: 12px !important;
 }

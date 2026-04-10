@@ -15,7 +15,7 @@
         <el-table-column label="司机信息" min-width="180">
           <template #default="{ row }">
             <template v-if="row.driverName">
-              <span>{{ row.driverName }}</span>
+              <span class="driver-link" @click="showDriverDetail(row)">{{ row.driverName }}</span>
               <el-tag
                 v-if="row.driverLevel"
                 :type="levelTagType(row.driverLevel)"
@@ -56,7 +56,62 @@
       </div>
     </el-card>
 
-    <!-- 取消原因对话框 -->
+    <!-- Driver Detail Dialog -->
+    <el-dialog v-model="driverDialogVisible" title="司机详情" width="480px" align-center>
+      <div v-if="selectedDriver" class="driver-detail">
+        <div class="driver-detail-header">
+          <el-avatar :size="64" icon="User" style="background: #4A90D9" />
+          <div class="driver-detail-meta">
+            <div class="driver-detail-name">{{ selectedDriver.driverName }}</div>
+            <el-tag
+              :type="levelTagType(selectedDriver.driverLevel)"
+              size="large"
+              style="margin-top: 4px"
+            >{{ levelText(selectedDriver.driverLevel) }}</el-tag>
+          </div>
+        </div>
+
+        <div class="driver-detail-score">
+          <span class="score-label">综合评分</span>
+          <el-rate
+            :model-value="selectedDriver.driverScore || 0"
+            disabled
+            show-score
+            score-template="{value}"
+            size="large"
+          />
+        </div>
+
+        <el-descriptions :column="1" border size="default" style="margin-top: 16px">
+          <el-descriptions-item label="车牌号">
+            <span style="font-weight: 700; letter-spacing: 1px">
+              {{ selectedDriver.plateNumber || selectedDriver.vehiclePlateNumber || '未知' }}
+            </span>
+          </el-descriptions-item>
+          <el-descriptions-item label="车辆品牌">
+            {{ selectedDriver.vehicleBrand || '未知' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="车辆型号">
+            {{ selectedDriver.vehicleModel || selectedDriver.vehicleTypeName || '未知' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="总完成订单">
+            <span style="font-weight: 600; color: #4A90D9">
+              {{ selectedDriver.totalOrders ?? selectedDriver.orderCount ?? '—' }}
+            </span>
+          </el-descriptions-item>
+          <el-descriptions-item label="投诉次数">
+            <span :style="{ fontWeight: 600, color: (selectedDriver.complaintCount || 0) > 0 ? '#F56C6C' : '#52c41a' }">
+              {{ selectedDriver.complaintCount ?? selectedDriver.complaints ?? '—' }}
+            </span>
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+      <template #footer>
+        <el-button type="primary" @click="driverDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- Cancel Dialog -->
     <el-dialog v-model="cancelDialogVisible" title="取消订单" width="400px">
       <el-form>
         <el-form-item label="取消原因">
@@ -92,6 +147,9 @@ const cancelReason = ref('')
 const cancelLoading = ref(false)
 const currentCancelOrder = ref(null)
 
+const driverDialogVisible = ref(false)
+const selectedDriver = ref(null)
+
 const statusText = (status) => {
   const map = { 0: '待接单', 1: '已接单', 2: '进行中', 3: '待确认' }
   return map[status] || '未知'
@@ -115,7 +173,12 @@ const levelText = (level) => {
   if (level === 3) return '金牌司机'
   if (level === 2) return '银牌司机'
   if (level === 1) return '普通司机'
-  return level  // fallback for string values
+  return level
+}
+
+const showDriverDetail = (row) => {
+  selectedDriver.value = row
+  driverDialogVisible.value = true
 }
 
 const loadOrders = async () => {
@@ -166,7 +229,41 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-container {
-  padding: 20px;
+.driver-link {
+  color: #4A90D9;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.driver-link:hover {
+  color: #357abd;
+  text-decoration: underline;
+}
+
+.driver-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f2f5;
+}
+.driver-detail-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1d1e2c;
+}
+.driver-detail-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #f8f9fc;
+  border-radius: 8px;
+}
+.score-label {
+  font-size: 14px;
+  color: #909399;
+  font-weight: 500;
 }
 </style>
