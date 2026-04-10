@@ -12,6 +12,7 @@ import com.drivereval.mapper.DriverInfoMapper;
 import com.drivereval.mapper.DriverPunishMapper;
 import com.drivereval.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import com.drivereval.controller.BaseController;
@@ -96,6 +97,7 @@ public class AdminPunishController extends BaseController {
     }
 
     @PostMapping("/manual")
+    @Transactional(rollbackFor = Exception.class)
     public Result<?> manualPunish(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         Long adminId = getUserId(request);
         Long driverId = Long.valueOf(params.get("driverId").toString());
@@ -115,7 +117,7 @@ public class AdminPunishController extends BaseController {
         punish.setPunishDays(days);
         punish.setPunishStart(LocalDateTime.now());
         punish.setPunishEnd(LocalDateTime.now().plusDays(days));
-        punish.setStatus(1); // active
+        punish.setStatus(Constants.STATUS_APPROVED); // active
         punish.setWeekComplaints(driverInfo.getWeekComplaints() != null ? driverInfo.getWeekComplaints() : 0);
         driverPunishMapper.insert(punish);
 
@@ -134,15 +136,16 @@ public class AdminPunishController extends BaseController {
     }
 
     @PostMapping("/lift")
+    @Transactional(rollbackFor = Exception.class)
     public Result<?> liftPunish(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         Long punishId = Long.valueOf(params.get("punishId").toString());
 
         DriverPunish punish = driverPunishMapper.selectById(punishId);
         if (punish == null) return Result.error("处罚记录不存在");
-        if (punish.getStatus() != 1) return Result.error("该处罚已过期");
+        if (punish.getStatus() != Constants.STATUS_APPROVED) return Result.error("该处罚已过期");
 
         // Mark punishment as expired
-        punish.setStatus(2);
+        punish.setStatus(Constants.STATUS_REJECTED);
         driverPunishMapper.updateById(punish);
 
         // Restore driver status
@@ -157,7 +160,7 @@ public class AdminPunishController extends BaseController {
         // Restore user status
         SysUser user = new SysUser();
         user.setId(punish.getDriverId());
-        user.setStatus(1); // active
+        user.setStatus(Constants.STATUS_APPROVED);
         sysUserMapper.updateById(user);
 
         return Result.success("已解除处罚");

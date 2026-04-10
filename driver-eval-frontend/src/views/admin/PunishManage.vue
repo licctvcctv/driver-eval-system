@@ -192,25 +192,18 @@ const loadData = async () => {
 
 const loadStats = async () => {
   try {
-    // Load all active punishments count
-    const resActive = await getPunishList({ status: 1, pageNum: 1, pageSize: 1 })
+    const [resActive, resAll] = await Promise.all([
+      getPunishList({ status: 1, pageNum: 1, pageSize: 1 }),
+      getPunishList({ status: '', pageNum: 1, pageSize: 1 })
+    ])
     const dActive = resActive.data || resActive
-    stats.active = dActive.total || 0
-
-    // Load all punishments total count
-    const resAll = await getPunishList({ status: '', pageNum: 1, pageSize: 1 })
     const dAll = resAll.data || resAll
+    stats.active = dActive.total || 0
     stats.totalCount = dAll.total || 0
-
-    // Estimate week new from recent records
-    const resRecent = await getPunishList({ status: '', pageNum: 1, pageSize: 100 })
-    const dRecent = resRecent.data || resRecent
-    const records = dRecent.records || dRecent.list || dRecent
-    const now = new Date()
-    const weekAgo = new Date(now.getTime() - 7 * 86400000)
-    stats.weekNew = Array.isArray(records)
-      ? records.filter(r => r.createTime && new Date(r.createTime) >= weekAgo).length
-      : 0
+    // 本周新增从总列表中统计
+    const allRecords = (dAll.records || dAll.list || [])
+    const weekAgo = new Date(Date.now() - 7 * 86400000)
+    stats.weekNew = allRecords.filter(r => r.createTime && new Date(r.createTime) >= weekAgo).length
   } catch (e) {
     console.error(e)
   }
@@ -244,20 +237,15 @@ const handleManualPunish = async () => {
   }
   submitLoading.value = true
   try {
-    const res = await manualPunish({
+    await manualPunish({
       driverId: manualForm.driverId,
       reason: manualForm.reason || '管理员手动处罚',
       days: manualForm.days
     })
-    const d = res.data !== undefined ? res : res
-    if (d.code === 200 || d.code === 0 || d.msg === '处罚成功' || d.data === '处罚成功') {
-      ElMessage.success('处罚成功')
-      manualVisible.value = false
-      loadData()
-      loadStats()
-    } else {
-      ElMessage.error(d.msg || d.message || '处罚失败')
-    }
+    ElMessage.success('处罚成功')
+    manualVisible.value = false
+    loadData()
+    loadStats()
   } catch (e) {
     ElMessage.error(e.response?.data?.msg || '处罚失败')
   } finally {
@@ -267,15 +255,10 @@ const handleManualPunish = async () => {
 
 const handleLift = async (row) => {
   try {
-    const res = await liftPunish({ punishId: row.id })
-    const d = res.data !== undefined ? res : res
-    if (d.code === 200 || d.code === 0 || d.msg === '已解除处罚' || d.data === '已解除处罚') {
-      ElMessage.success('已解除处罚')
-      loadData()
-      loadStats()
-    } else {
-      ElMessage.error(d.msg || d.message || '操作失败')
-    }
+    await liftPunish({ punishId: row.id })
+    ElMessage.success('已解除处罚')
+    loadData()
+    loadStats()
   } catch (e) {
     ElMessage.error(e.response?.data?.msg || '操作失败')
   }
