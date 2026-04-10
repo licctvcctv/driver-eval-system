@@ -2,6 +2,7 @@ package com.drivereval.controller.driver;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.DriverInfo;
 import com.drivereval.entity.OrderInfo;
@@ -10,27 +11,20 @@ import com.drivereval.mapper.OrderInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/driver/order")
-public class DriverOrderController {
+public class DriverOrderController extends BaseController {
 
     @Autowired
     private OrderInfoMapper orderInfoMapper;
 
     @Autowired
     private DriverInfoMapper driverInfoMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/dispatch")
     public Result<?> getDispatchedOrders(
@@ -42,7 +36,7 @@ public class DriverOrderController {
         Page<OrderInfo> page = new Page<>(pageNum, pageSize);
         QueryWrapper<OrderInfo> wrapper = new QueryWrapper<OrderInfo>()
                 .eq("driver_id", userId)
-                .eq("status", 1)
+                .eq("status", Constants.ORDER_DISPATCHED)
                 .orderByDesc("create_time");
 
         return Result.success(orderInfoMapper.selectPage(page, wrapper));
@@ -58,7 +52,7 @@ public class DriverOrderController {
         Page<OrderInfo> page = new Page<>(pageNum, pageSize);
         QueryWrapper<OrderInfo> wrapper = new QueryWrapper<OrderInfo>()
                 .eq("driver_id", userId)
-                .eq("status", 3)
+                .eq("status", Constants.ORDER_COMPLETED)
                 .orderByDesc("create_time");
 
         return Result.success(orderInfoMapper.selectPage(page, wrapper));
@@ -74,7 +68,7 @@ public class DriverOrderController {
         Page<OrderInfo> page = new Page<>(pageNum, pageSize);
         QueryWrapper<OrderInfo> wrapper = new QueryWrapper<OrderInfo>()
                 .eq("driver_id", userId)
-                .eq("status", 4)
+                .eq("status", Constants.ORDER_CANCELLED_DRIVER)
                 .orderByDesc("create_time");
 
         return Result.success(orderInfoMapper.selectPage(page, wrapper));
@@ -91,11 +85,11 @@ public class DriverOrderController {
         if (!order.getDriverId().equals(userId)) {
             return Result.error("无权操作此订单");
         }
-        if (order.getStatus() != 1) {
+        if (order.getStatus() != Constants.ORDER_DISPATCHED) {
             return Result.error("订单状态不允许完成");
         }
 
-        order.setStatus(3); // 已完成
+        order.setStatus(Constants.ORDER_COMPLETED); // 已完成
         order.setCompleteTime(LocalDateTime.now());
         orderInfoMapper.updateById(order);
 
@@ -124,11 +118,11 @@ public class DriverOrderController {
         if (!order.getDriverId().equals(userId)) {
             return Result.error("无权操作此订单");
         }
-        if (order.getStatus() >= 3) {
+        if (order.getStatus() >= Constants.ORDER_IN_PROGRESS) {
             return Result.error("订单状态不允许取消");
         }
 
-        order.setStatus(4); // 已取消
+        order.setStatus(Constants.ORDER_CANCELLED_DRIVER); // 司机取消
         order.setCancelTime(LocalDateTime.now());
         order.setCancelReason(reason);
         orderInfoMapper.updateById(order);

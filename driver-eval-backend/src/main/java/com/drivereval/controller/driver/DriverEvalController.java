@@ -12,6 +12,7 @@ import com.drivereval.mapper.EvaluationTagRelationMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/driver/eval")
-public class DriverEvalController {
+public class DriverEvalController extends BaseController {
 
     @Autowired
     private EvaluationMapper evaluationMapper;
@@ -29,14 +30,6 @@ public class DriverEvalController {
 
     @Autowired
     private EvalTagMapper evalTagMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/list")
     public Result<?> getPassengerEvaluations(

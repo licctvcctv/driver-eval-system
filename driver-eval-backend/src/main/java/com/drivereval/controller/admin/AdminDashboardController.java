@@ -7,6 +7,7 @@ import com.drivereval.mapper.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,7 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/dashboard")
-public class AdminDashboardController {
+public class AdminDashboardController extends BaseController {
 
     @Autowired
     private SysUserMapper sysUserMapper;
@@ -29,14 +30,6 @@ public class AdminDashboardController {
 
     @Autowired
     private DriverPunishMapper driverPunishMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/stats")
     public Result<?> getDashboardStats(HttpServletRequest request) {

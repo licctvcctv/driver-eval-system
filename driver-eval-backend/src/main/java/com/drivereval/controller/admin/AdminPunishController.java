@@ -8,22 +8,15 @@ import com.drivereval.mapper.DriverPunishMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/admin/punish")
-public class AdminPunishController {
+public class AdminPunishController extends BaseController {
 
     @Autowired
     private DriverPunishMapper driverPunishMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/list")
     public Result<?> punishList(

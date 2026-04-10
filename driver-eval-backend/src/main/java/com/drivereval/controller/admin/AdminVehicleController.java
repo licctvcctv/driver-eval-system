@@ -10,26 +10,19 @@ import com.drivereval.mapper.VehicleTypeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/vehicle")
-public class AdminVehicleController {
+public class AdminVehicleController extends BaseController {
 
     @Autowired
     private VehicleInfoMapper vehicleInfoMapper;
 
     @Autowired
     private VehicleTypeMapper vehicleTypeMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/list")
     public Result<?> vehicleList(

@@ -8,23 +8,16 @@ import com.drivereval.mapper.SensitiveWordMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/sensitive-word")
-public class AdminSensitiveWordController {
+public class AdminSensitiveWordController extends BaseController {
 
     @Autowired
     private SensitiveWordMapper sensitiveWordMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/list")
     public Result<?> wordList(

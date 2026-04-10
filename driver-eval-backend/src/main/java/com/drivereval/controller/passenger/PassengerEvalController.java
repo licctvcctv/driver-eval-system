@@ -2,6 +2,7 @@ package com.drivereval.controller.passenger;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.Evaluation;
 import com.drivereval.entity.EvaluationTagRelation;
@@ -12,13 +13,14 @@ import com.drivereval.mapper.OrderInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/passenger/eval")
-public class PassengerEvalController {
+public class PassengerEvalController extends BaseController {
 
     @Autowired
     private EvaluationMapper evaluationMapper;
@@ -28,14 +30,6 @@ public class PassengerEvalController {
 
     @Autowired
     private OrderInfoMapper orderInfoMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @PostMapping("/submit")
     public Result<?> submitEvaluation(@RequestBody Map<String, Object> params, HttpServletRequest request) {
@@ -53,7 +47,7 @@ public class PassengerEvalController {
         if (!order.getPassengerId().equals(userId)) {
             return Result.error("无权评价此订单");
         }
-        if (order.getStatus() != 3) {
+        if (order.getStatus() != Constants.ORDER_COMPLETED) {
             return Result.error("只能评价已完成的订单");
         }
         if (order.getIsEvaluated() != null && order.getIsEvaluated() == 1) {

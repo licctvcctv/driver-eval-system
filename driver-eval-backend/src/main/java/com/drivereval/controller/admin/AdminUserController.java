@@ -8,23 +8,16 @@ import com.drivereval.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/user")
-public class AdminUserController {
+public class AdminUserController extends BaseController {
 
     @Autowired
     private SysUserMapper sysUserMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/list")
     public Result<?> pageList(

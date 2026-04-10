@@ -1,29 +1,23 @@
 package com.drivereval.controller.driver;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.VehicleInfo;
 import com.drivereval.mapper.VehicleInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/driver/vehicle")
-public class DriverVehicleController {
+public class DriverVehicleController extends BaseController {
 
     @Autowired
     private VehicleInfoMapper vehicleInfoMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/info")
     public Result<?> getMyVehicle(HttpServletRequest request) {
@@ -67,7 +61,7 @@ public class DriverVehicleController {
             vehicle.setColor(color);
             vehicle.setVehicleTypeId(vehicleTypeId);
             vehicle.setSeats(seats);
-            vehicle.setStatus(1);
+            vehicle.setStatus(Constants.STATUS_APPROVED);
             vehicleInfoMapper.insert(vehicle);
             return Result.success("保存成功");
         }

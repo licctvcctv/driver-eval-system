@@ -1,6 +1,7 @@
 package com.drivereval.controller.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.common.util.JwtUtil;
 import com.drivereval.entity.DriverInfo;
@@ -83,7 +84,25 @@ public class AuthController {
             return Result.error("用户名、密码和角色不能为空");
         }
 
-        int role = Integer.parseInt(roleStr);
+        // 基本长度校验
+        if (username.length() < 3 || username.length() > 30) {
+            return Result.error("用户名长度必须在3-30个字符之间");
+        }
+        if (password.length() < 6 || password.length() > 50) {
+            return Result.error("密码长度必须在6-50个字符之间");
+        }
+
+        int role;
+        try {
+            role = Integer.parseInt(roleStr);
+        } catch (NumberFormatException e) {
+            return Result.error("角色参数格式错误");
+        }
+
+        // 仅允许乘客或司机注册，禁止管理员注册
+        if (role != Constants.ROLE_PASSENGER && role != Constants.ROLE_DRIVER) {
+            return Result.error("角色参数无效，仅允许乘客或司机注册");
+        }
 
         // 校验用户名唯一性
         SysUser existing = sysUserMapper.selectOne(
@@ -99,22 +118,22 @@ public class AuthController {
         user.setRealName(realName != null ? realName : "");
         user.setPhone(phone != null ? phone : "");
         user.setRole(role);
-        user.setStatus(1);
+        user.setStatus(Constants.STATUS_APPROVED);
         if (idCardImg != null) {
             user.setIdCardImg(idCardImg);
         }
         sysUserMapper.insert(user);
 
         // 如果是司机角色，创建司机扩展信息
-        if (role == 2) {
+        if (role == Constants.ROLE_DRIVER) {
             DriverInfo driverInfo = new DriverInfo();
             driverInfo.setUserId(user.getId());
             driverInfo.setScore(new BigDecimal("80.00"));
-            driverInfo.setLevel(1);
+            driverInfo.setLevel(Constants.LEVEL_NORMAL);
             driverInfo.setTotalOrders(0);
             driverInfo.setTotalComplaints(0);
             driverInfo.setWeekComplaints(0);
-            driverInfo.setOnlineStatus(0);
+            driverInfo.setOnlineStatus(Constants.OFFLINE);
             driverInfoMapper.insert(driverInfo);
         }
 

@@ -9,7 +9,7 @@ public class SensitiveWordUtil {
     private static final String END_FLAG = "isEnd";
 
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> sensitiveWordMap = new HashMap<>();
+    private static volatile Map<String, Object> sensitiveWordMap = new HashMap<>();
 
     /**
      * 初始化敏感词库，构建 DFA 前缀树
@@ -18,9 +18,9 @@ public class SensitiveWordUtil {
      */
     @SuppressWarnings("unchecked")
     public static void init(List<String> words) {
-        sensitiveWordMap = new HashMap<>(words.size());
+        Map<String, Object> newSensitiveWordMap = new HashMap<>(words.size());
         for (String word : words) {
-            Map<String, Object> currentMap = sensitiveWordMap;
+            Map<String, Object> currentMap = newSensitiveWordMap;
             for (int i = 0; i < word.length(); i++) {
                 String key = String.valueOf(word.charAt(i));
                 Object obj = currentMap.get(key);
@@ -35,6 +35,7 @@ public class SensitiveWordUtil {
             }
             currentMap.put(END_FLAG, "1");
         }
+        sensitiveWordMap = newSensitiveWordMap;
     }
 
     /**

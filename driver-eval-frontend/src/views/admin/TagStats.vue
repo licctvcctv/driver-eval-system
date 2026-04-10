@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { getAllTagStats } from '@/api/evaluation'
 
@@ -68,11 +68,21 @@ const renderChart = (data) => {
   })
 }
 
+const handleResize = () => {
+  chartInstance && chartInstance.resize()
+}
+
 onMounted(() => {
   loadData()
-  window.addEventListener('resize', () => {
-    chartInstance && chartInstance.resize()
-  })
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  if (chartInstance) {
+    chartInstance.dispose()
+    chartInstance = null
+  }
 })
 </script>
 

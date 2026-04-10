@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/common")
-public class CommonController {
+public class CommonController extends BaseController {
 
     @Autowired
     private AnnouncementMapper announcementMapper;
@@ -31,14 +31,6 @@ public class CommonController {
 
     @Autowired
     private SensitiveWordMapper sensitiveWordMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @PostMapping("/upload")
     public Result<?> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {

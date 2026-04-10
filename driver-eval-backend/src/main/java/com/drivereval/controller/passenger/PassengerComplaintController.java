@@ -2,6 +2,7 @@ package com.drivereval.controller.passenger;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.Complaint;
 import com.drivereval.entity.OrderInfo;
@@ -10,26 +11,19 @@ import com.drivereval.mapper.OrderInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/passenger/complaint")
-public class PassengerComplaintController {
+public class PassengerComplaintController extends BaseController {
 
     @Autowired
     private ComplaintMapper complaintMapper;
 
     @Autowired
     private OrderInfoMapper orderInfoMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @PostMapping("/submit")
     public Result<?> submitComplaint(@RequestBody Map<String, Object> params, HttpServletRequest request) {
@@ -58,7 +52,7 @@ public class PassengerComplaintController {
         complaint.setContent(content);
         complaint.setImages(images);
         complaint.setIsAnonymous(isAnonymous);
-        complaint.setStatus(0); // 待审核
+        complaint.setStatus(Constants.STATUS_PENDING); // 待审核
         complaintMapper.insert(complaint);
 
         // 更新订单为已投诉

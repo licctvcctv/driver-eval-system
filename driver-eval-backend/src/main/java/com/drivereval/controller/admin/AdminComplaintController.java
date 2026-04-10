@@ -8,24 +8,17 @@ import com.drivereval.mapper.ComplaintMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/complaint")
-public class AdminComplaintController {
+public class AdminComplaintController extends BaseController {
 
     @Autowired
     private ComplaintMapper complaintMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/list")
     public Result<?> complaintList(

@@ -4,7 +4,7 @@
 <mapper namespace="com.drivereval.mapper.DriverInfoMapper">
 
     <update id="resetAllWeekComplaints">
-        UPDATE driver_info SET week_complaints = 0
+        UPDATE driver_info SET week_complaints = 0 WHERE week_complaints > 0
     </update>
 
 </mapper>

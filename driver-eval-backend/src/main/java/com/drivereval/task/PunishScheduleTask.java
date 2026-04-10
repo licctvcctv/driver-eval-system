@@ -1,6 +1,7 @@
 package com.drivereval.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.drivereval.common.Constants;
 import com.drivereval.entity.DriverInfo;
 import com.drivereval.entity.DriverPunish;
 import com.drivereval.mapper.DriverInfoMapper;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,12 +37,13 @@ public class PunishScheduleTask {
      * 每周一00:05 检查周投诉>=5的司机，自动处罚下线3天
      */
     @Scheduled(cron = "0 5 0 ? * MON")
+    @Transactional
     public void weeklyComplaintCheck() {
         log.info("=== 开始执行每周投诉检查任务 ===");
         List<DriverInfo> drivers = driverInfoMapper.selectList(
                 new LambdaQueryWrapper<DriverInfo>()
                         .ge(DriverInfo::getWeekComplaints, 5)
-                        .ne(DriverInfo::getOnlineStatus, 2)
+                        .ne(DriverInfo::getOnlineStatus, Constants.PUNISHED)
         );
 
         for (DriverInfo driver : drivers) {
@@ -51,19 +54,19 @@ public class PunishScheduleTask {
             punish.setPunishDays(3);
             punish.setPunishStart(LocalDateTime.now());
             punish.setPunishEnd(LocalDateTime.now().plusDays(3));
-            punish.setStatus(1);
+            punish.setStatus(Constants.STATUS_APPROVED);
             punish.setWeekComplaints(driver.getWeekComplaints());
             driverPunishMapper.insert(punish);
 
             // 更新司机状态为处罚中
-            driver.setOnlineStatus(2);
+            driver.setOnlineStatus(Constants.PUNISHED);
             driver.setPunishEndTime(punish.getPunishEnd());
             driverInfoMapper.updateById(driver);
 
             // 更新用户状态
             SysUser user = new SysUser();
             user.setId(driver.getUserId());
-            user.setStatus(2);
+            user.setStatus(Constants.PUNISHED);
             sysUserMapper.updateById(user);
 
             log.info("司机[userId={}]因周投诉{}次被自动处罚3天", driver.getUserId(), driver.getWeekComplaints());
@@ -85,17 +88,18 @@ public class PunishScheduleTask {
      * 每天00:01 检查处罚到期的记录，恢复司机状态
      */
     @Scheduled(cron = "0 1 0 * * ?")
+    @Transactional
     public void dailyPunishExpireCheck() {
         log.info("=== 开始检查处罚到期记录 ===");
         List<DriverPunish> expired = driverPunishMapper.selectList(
                 new LambdaQueryWrapper<DriverPunish>()
-                        .eq(DriverPunish::getStatus, 1)
+                        .eq(DriverPunish::getStatus, Constants.STATUS_APPROVED)
                         .le(DriverPunish::getPunishEnd, LocalDateTime.now())
         );
 
         for (DriverPunish p : expired) {
             // 标记处罚已过期
-            p.setStatus(2);
+            p.setStatus(Constants.STATUS_REJECTED);
             driverPunishMapper.updateById(p);
 
             // 恢复司机状态
@@ -103,7 +107,7 @@ public class PunishScheduleTask {
                     new LambdaQueryWrapper<DriverInfo>().eq(DriverInfo::getUserId, p.getDriverId())
             );
             if (driver != null) {
-                driver.setOnlineStatus(0); // 恢复为离线，需司机手动上线
+                driver.setOnlineStatus(Constants.OFFLINE); // 恢复为离线，需司机手动上线
                 driver.setPunishEndTime(null);
                 driverInfoMapper.updateById(driver);
             }
@@ -111,7 +115,7 @@ public class PunishScheduleTask {
             // 恢复用户状态
             SysUser user = new SysUser();
             user.setId(p.getDriverId());
-            user.setStatus(1);
+            user.setStatus(Constants.STATUS_APPROVED);
             sysUserMapper.updateById(user);
 
             log.info("司机[userId={}]处罚到期，已恢复正常状态", p.getDriverId());

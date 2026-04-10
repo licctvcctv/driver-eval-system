@@ -12,6 +12,7 @@ import com.drivereval.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/score")
-public class AdminScoreController {
+public class AdminScoreController extends BaseController {
 
     @Autowired
     private DriverInfoMapper driverInfoMapper;
@@ -29,14 +30,6 @@ public class AdminScoreController {
 
     @Autowired
     private SysUserMapper sysUserMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/list")
     public Result<?> driverScoreList(

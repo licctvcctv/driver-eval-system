@@ -214,13 +214,19 @@ const loadTags = async () => {
   }
 }
 
-const openEvalDialog = (row) => {
+let tagsLoaded = false
+
+const openEvalDialog = async (row) => {
   currentOrder.value = row
   evalForm.starRating = 5
   evalForm.tagIds = []
   evalForm.content = ''
   evalForm.isAnonymous = false
   evalDialogVisible.value = true
+  if (!tagsLoaded) {
+    await loadTags()
+    tagsLoaded = true
+  }
 }
 
 const handleSubmitEval = async () => {
@@ -299,7 +305,6 @@ const handleSubmitComplaint = async () => {
 
 onMounted(() => {
   loadOrders()
-  loadTags()
 })
 </script>
 

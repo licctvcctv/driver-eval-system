@@ -9,6 +9,7 @@ import com.drivereval.mapper.SysUserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -17,21 +18,13 @@ import java.util.Random;
 
 @RestController
 @RequestMapping("/api/driver/profile")
-public class DriverProfileController {
+public class DriverProfileController extends BaseController {
 
     @Autowired
     private SysUserMapper sysUserMapper;
 
     @Autowired
     private DriverInfoMapper driverInfoMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @GetMapping("/info")
     public Result<?> getProfile(HttpServletRequest request) {

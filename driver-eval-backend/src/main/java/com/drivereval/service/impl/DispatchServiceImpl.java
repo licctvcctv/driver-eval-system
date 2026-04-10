@@ -20,6 +20,8 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class DispatchServiceImpl implements DispatchService {
@@ -52,22 +54,22 @@ public class DispatchServiceImpl implements DispatchService {
             return false;
         }
 
-        // 过滤掉正在进行订单的司机（订单状态 IN 0,1,2,3）
-        List<Integer> activeStatuses = Arrays.asList(
-                Constants.ORDER_DISPATCHING,
-                Constants.ORDER_DISPATCHED,
-                Constants.ORDER_ACCEPTED,
-                Constants.ORDER_IN_PROGRESS);
+        // Get all driver IDs that have active orders (status in 0,1,2,3)
+        List<Object> busyDriverIds = orderInfoMapper.selectObjs(
+                new LambdaQueryWrapper<OrderInfo>()
+                        .select(OrderInfo::getDriverId)
+                        .in(OrderInfo::getStatus, Constants.ORDER_DISPATCHING, Constants.ORDER_DISPATCHED, Constants.ORDER_ACCEPTED, Constants.ORDER_IN_PROGRESS)
+                        .isNotNull(OrderInfo::getDriverId)
+                        .groupBy(OrderInfo::getDriverId)
+        );
+        Set<Long> busySet = busyDriverIds.stream()
+                .map(id -> Long.valueOf(id.toString()))
+                .collect(Collectors.toSet());
 
         List<DriverInfo> availableDrivers = new ArrayList<>();
         for (DriverInfo driver : onlineDrivers) {
-            long activeOrderCount = orderInfoMapper.selectCount(
-                    new LambdaQueryWrapper<OrderInfo>()
-                            .eq(OrderInfo::getDriverId, driver.getId())
-                            .in(OrderInfo::getStatus, activeStatuses));
-            if (activeOrderCount == 0) {
-                availableDrivers.add(driver);
-            }
+            if (busySet.contains(driver.getUserId())) continue;
+            availableDrivers.add(driver);
         }
 
         if (availableDrivers.isEmpty()) {

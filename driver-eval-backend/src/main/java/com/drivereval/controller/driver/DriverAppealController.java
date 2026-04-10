@@ -2,6 +2,7 @@ package com.drivereval.controller.driver;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.Appeal;
 import com.drivereval.entity.Complaint;
@@ -10,26 +11,19 @@ import com.drivereval.mapper.ComplaintMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/driver/appeal")
-public class DriverAppealController {
+public class DriverAppealController extends BaseController {
 
     @Autowired
     private AppealMapper appealMapper;
 
     @Autowired
     private ComplaintMapper complaintMapper;
-
-    private Long getUserId(HttpServletRequest request) {
-        return (Long) request.getAttribute("userId");
-    }
-
-    private Integer getRole(HttpServletRequest request) {
-        return (Integer) request.getAttribute("role");
-    }
 
     @PostMapping("/submit")
     public Result<?> submitAppeal(@RequestBody Map<String, Object> params, HttpServletRequest request) {
@@ -59,7 +53,7 @@ public class DriverAppealController {
         appeal.setComplaintId(complaintId);
         appeal.setDriverId(userId);
         appeal.setContent(content);
-        appeal.setStatus(0); // 待审核
+        appeal.setStatus(Constants.STATUS_PENDING); // 待审核
         appealMapper.insert(appeal);
 
         return Result.success("申诉提交成功");
