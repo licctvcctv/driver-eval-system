@@ -98,7 +98,7 @@ const queryParams = ref({ page: 1, size: 10 })
 const replyDialogVisible = ref(false)
 const replyLoading = ref(false)
 const replyFormRef = ref(null)
-const replyForm = ref({ evalId: null, content: '' })
+const replyForm = ref({ evaluationId: null, content: '' })
 const replyRules = {
   content: [{ required: true, message: '请输入回复内容', trigger: 'blur' }]
 }
@@ -118,7 +118,7 @@ async function fetchEvals() {
 }
 
 function openReplyDialog(row) {
-  replyForm.value = { evalId: row.id, content: '' }
+  replyForm.value = { evaluationId: row.id, content: '' }
   replyDialogVisible.value = true
 }
 
@@ -132,7 +132,7 @@ async function handleReply() {
     // 敏感词检测
     const checkRes = await checkSensitive(replyForm.value.content)
     const checkData = checkRes.data || checkRes
-    if (checkData.hasSensitive || checkData.found) {
+    if (checkData.contains) {
       ElMessage.warning('回复内容包含敏感词，请修改后重试')
       replyLoading.value = false
       return

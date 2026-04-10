@@ -1,16 +1,14 @@
 package com.drivereval.controller.admin;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.drivereval.common.Result;
 import com.drivereval.entity.Complaint;
-import com.drivereval.mapper.ComplaintMapper;
+import com.drivereval.service.ComplaintService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @RestController
@@ -18,7 +16,7 @@ import java.util.Map;
 public class AdminComplaintController extends BaseController {
 
     @Autowired
-    private ComplaintMapper complaintMapper;
+    private ComplaintService complaintService;
 
     @GetMapping("/list")
     public Result<?> complaintList(
@@ -28,35 +26,17 @@ public class AdminComplaintController extends BaseController {
             HttpServletRequest request) {
 
         Page<Complaint> page = new Page<>(pageNum, pageSize);
-        QueryWrapper<Complaint> wrapper = new QueryWrapper<Complaint>()
-                .orderByDesc("create_time");
-
-        if (status != null) {
-            wrapper.eq("status", status);
-        }
-
-        return Result.success(complaintMapper.selectPage(page, wrapper));
+        return Result.success(complaintService.getAllComplaints(status, page));
     }
 
     @PostMapping("/review")
     public Result<?> reviewComplaint(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         Long adminId = getUserId(request);
-
         Long complaintId = Long.valueOf(params.get("complaintId").toString());
         Integer status = Integer.valueOf(params.get("status").toString());
-        String remark = params.get("remark") != null ? params.get("remark").toString() : null;
+        String remark = params.get("remark") != null ? params.get("remark").toString() : "";
 
-        Complaint complaint = complaintMapper.selectById(complaintId);
-        if (complaint == null) {
-            return Result.error("投诉不存在");
-        }
-
-        complaint.setStatus(status);
-        complaint.setAdminRemark(remark);
-        complaint.setReviewTime(LocalDateTime.now());
-        complaint.setReviewerId(adminId);
-        complaintMapper.updateById(complaint);
-
+        complaintService.reviewComplaint(complaintId, adminId, status, remark);
         return Result.success("审核完成");
     }
 }

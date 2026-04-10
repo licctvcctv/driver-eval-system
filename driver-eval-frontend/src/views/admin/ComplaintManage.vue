@@ -68,8 +68,8 @@
       <el-form :model="reviewForm" label-width="80px">
         <el-form-item label="审核结果">
           <el-radio-group v-model="reviewForm.status">
-            <el-radio label="已通过">通过</el-radio>
-            <el-radio label="已驳回">驳回</el-radio>
+            <el-radio :label="1">通过</el-radio>
+            <el-radio :label="2">驳回</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="备注">
@@ -94,7 +94,7 @@ const tableData = ref([])
 const total = ref(0)
 const query = reactive({ status: '', pageNum: 1, pageSize: 10 })
 const reviewVisible = ref(false)
-const reviewForm = reactive({ id: null, status: '已通过', remark: '' })
+const reviewForm = reactive({ complaintId: null, status: 1, remark: '' })
 
 const complaintStatusType = (s) => {
   if (s === '待审核') return 'warning'
@@ -118,7 +118,7 @@ const loadData = async () => {
 }
 
 const openReview = (row) => {
-  Object.assign(reviewForm, { id: row.id, status: '已通过', remark: '' })
+  Object.assign(reviewForm, { complaintId: row.id, status: 1, remark: '' })
   reviewVisible.value = true
 }
 

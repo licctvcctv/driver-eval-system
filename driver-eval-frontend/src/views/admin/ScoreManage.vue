@@ -6,9 +6,9 @@
       <el-col :span="6">
         <el-select v-model="query.level" placeholder="等级筛选" clearable @change="loadData">
           <el-option label="全部" value="" />
-          <el-option label="金牌" value="金牌" />
-          <el-option label="银牌" value="银牌" />
-          <el-option label="普通" value="普通" />
+          <el-option label="金牌" :value="3" />
+          <el-option label="银牌" :value="2" />
+          <el-option label="普通" :value="1" />
         </el-select>
       </el-col>
       <el-col :span="4">
@@ -59,10 +59,10 @@
     <el-dialog v-model="detailVisible" title="评分详情" width="650px">
       <div v-if="detailData">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="司机姓名">{{ detailData.driverName }}</el-descriptions-item>
-          <el-descriptions-item label="当前评分">{{ detailData.score }}</el-descriptions-item>
-          <el-descriptions-item label="等级">{{ detailData.level }}</el-descriptions-item>
-          <el-descriptions-item label="总订单数">{{ detailData.totalOrders }}</el-descriptions-item>
+          <el-descriptions-item label="司机姓名">{{ detailData.user?.name || detailData.user?.username || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="当前评分">{{ detailData.driverInfo?.score }}</el-descriptions-item>
+          <el-descriptions-item label="等级">{{ levelLabel(detailData.driverInfo?.level) }}</el-descriptions-item>
+          <el-descriptions-item label="总订单数">{{ detailData.driverInfo?.totalOrders }}</el-descriptions-item>
         </el-descriptions>
         <h4 style="margin: 16px 0 8px">评分变更记录</h4>
         <el-table :data="detailData.scoreLogs || []" border size="small" max-height="300">

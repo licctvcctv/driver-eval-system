@@ -136,11 +136,11 @@ public class DispatchServiceImpl implements DispatchService {
         // 查询司机车辆
         VehicleInfo vehicle = vehicleInfoMapper.selectOne(
                 new LambdaQueryWrapper<VehicleInfo>()
-                        .eq(VehicleInfo::getDriverId, selectedDriver.getId())
+                        .eq(VehicleInfo::getDriverId, selectedDriver.getUserId())
                         .last("LIMIT 1"));
 
         // 更新订单信息
-        order.setDriverId(selectedDriver.getId());
+        order.setDriverId(selectedDriver.getUserId());
         order.setVehicleId(vehicle != null ? vehicle.getId() : null);
         order.setStatus(Constants.ORDER_DISPATCHED);
         order.setDriverScore(selectedDriver.getScore());

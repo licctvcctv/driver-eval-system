@@ -1,25 +1,23 @@
 import request from '../utils/request'
 
+// Admin
 export function getUserList(params) {
-  return request({ url: '/user/list', method: 'get', params })
+  return request({ url: '/admin/user/list', method: 'get', params })
+}
+export function toggleStatus(data) {
+  return request({ url: '/admin/user/toggle-status', method: 'post', data })
 }
 
-export function toggleStatus(id) {
-  return request({ url: `/user/toggle-status/${id}`, method: 'put' })
-}
-
+// Driver
 export function getDriverProfile() {
-  return request({ url: '/user/driver/profile', method: 'get' })
+  return request({ url: '/driver/profile/info', method: 'get' })
 }
-
 export function goOnline() {
-  return request({ url: '/user/driver/online', method: 'put' })
+  return request({ url: '/driver/profile/online', method: 'post' })
 }
-
 export function goOffline() {
-  return request({ url: '/user/driver/offline', method: 'put' })
+  return request({ url: '/driver/profile/offline', method: 'post' })
 }
-
 export function updateProfile(data) {
-  return request({ url: '/user/update', method: 'put', data })
+  return request({ url: '/driver/profile/update', method: 'post', data })
 }

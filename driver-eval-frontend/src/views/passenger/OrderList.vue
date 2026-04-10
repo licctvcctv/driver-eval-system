@@ -146,7 +146,7 @@ const confirmCancel = async () => {
   }
   cancelLoading.value = true
   try {
-    await cancelOrder(currentCancelOrder.value.id)
+    await cancelOrder(currentCancelOrder.value.id, { reason: cancelReason.value })
     ElMessage.success('订单已取消')
     cancelDialogVisible.value = false
     loadOrders()

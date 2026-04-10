@@ -161,7 +161,7 @@ async function handleSubmitAppeal() {
     // 敏感词检测
     const checkRes = await checkSensitive(appealForm.value.content)
     const checkData = checkRes.data || checkRes
-    if (checkData.hasSensitive || checkData.found) {
+    if (checkData.contains) {
       ElMessage.warning('申诉内容包含敏感词，请修改后重试')
       appealLoading.value = false
       return
