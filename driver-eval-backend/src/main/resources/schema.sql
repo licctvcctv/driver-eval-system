@@ -216,18 +216,18 @@ CREATE TABLE driver_evaluation (
 
 -- 管理员账号 (密码: admin123)
 INSERT INTO sys_user (username, password, real_name, phone, role, status) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '系统管理员', '13800000000', 3, 1);
+('admin', '$2a$10$DafaSGSg3DAh20sE3nPVRuDqsE1f5wsezih58E8eqoF9dlQ12VgJK', '系统管理员', '13800000000', 3, 1);
 
--- 测试乘客 (密码: 123456)
+-- 测试乘客 (密码: admin123)
 INSERT INTO sys_user (username, password, real_name, phone, role, status) VALUES
-('passenger1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '张三', '13800000001', 1, 1),
-('passenger2', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '李四', '13800000002', 1, 1);
+('passenger1', '$2a$10$DafaSGSg3DAh20sE3nPVRuDqsE1f5wsezih58E8eqoF9dlQ12VgJK', '张三', '13800000001', 1, 1),
+('passenger2', '$2a$10$DafaSGSg3DAh20sE3nPVRuDqsE1f5wsezih58E8eqoF9dlQ12VgJK', '李四', '13800000002', 1, 1);
 
--- 测试司机 (密码: 123456)
+-- 测试司机 (密码: admin123)
 INSERT INTO sys_user (username, password, real_name, phone, role, status) VALUES
-('driver1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '王师傅', '13800000003', 2, 1),
-('driver2', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '赵师傅', '13800000004', 2, 1),
-('driver3', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '刘师傅', '13800000005', 2, 1);
+('driver1', '$2a$10$DafaSGSg3DAh20sE3nPVRuDqsE1f5wsezih58E8eqoF9dlQ12VgJK', '王师傅', '13800000003', 2, 1),
+('driver2', '$2a$10$DafaSGSg3DAh20sE3nPVRuDqsE1f5wsezih58E8eqoF9dlQ12VgJK', '赵师傅', '13800000004', 2, 1),
+('driver3', '$2a$10$DafaSGSg3DAh20sE3nPVRuDqsE1f5wsezih58E8eqoF9dlQ12VgJK', '刘师傅', '13800000005', 2, 1);
 
 -- 司机扩展信息（模拟位置在北京附近）
 INSERT INTO driver_info (user_id, score, level, total_orders, online_status, latitude, longitude) VALUES

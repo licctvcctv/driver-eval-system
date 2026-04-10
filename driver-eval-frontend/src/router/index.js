@@ -81,6 +81,15 @@ const router = createRouter({
   routes
 })
 
+// 数字角色 → 字符串角色映射
+const roleCodeMap = { 1: 'PASSENGER', 2: 'DRIVER', 3: 'ADMIN' }
+
+function getUserRole(userInfo) {
+  if (!userInfo) return null
+  if (typeof userInfo.role === 'number') return roleCodeMap[userInfo.role]
+  return userInfo.role
+}
+
 const roleHomeMap = {
   PASSENGER: '/passenger/home',
   DRIVER: '/driver/profile',
@@ -90,10 +99,11 @@ const roleHomeMap = {
 router.beforeEach((to, from, next) => {
   const token = getToken()
   const userInfo = getUserInfo()
+  const userRole = getUserRole(userInfo)
 
   if (to.path === '/login' || to.path === '/register') {
     if (token && userInfo) {
-      next(roleHomeMap[userInfo.role] || '/login')
+      next(roleHomeMap[userRole] || '/login')
     } else {
       next()
     }
@@ -105,8 +115,8 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  if (to.meta.role && userInfo && to.meta.role !== userInfo.role) {
-    next(roleHomeMap[userInfo.role] || '/login')
+  if (to.meta.role && userRole && to.meta.role !== userRole) {
+    next(roleHomeMap[userRole] || '/login')
     return
   }
 
