@@ -149,8 +149,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { getOrders } from '@/api/order'
 import { submitEval } from '@/api/evaluation'
 import { submitComplaint } from '@/api/complaint'
-import { getTagList } from '@/api/tag'
-import { upload } from '@/api/common'
+import { upload, getCommonTagList } from '@/api/common'
 
 const loading = ref(false)
 const orders = ref([])
@@ -213,7 +212,7 @@ const loadOrders = async () => {
 
 const loadTags = async () => {
   try {
-    const res = await getTagList({ pageNum: 1, pageSize: 100 })
+    const res = await getCommonTagList()
     const data = res.data || res
     tagList.value = data.records || data.list || data || []
   } catch (e) {

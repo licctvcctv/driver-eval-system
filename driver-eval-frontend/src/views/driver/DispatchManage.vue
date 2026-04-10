@@ -89,7 +89,7 @@
 import { ref, onMounted } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getDispatchOrders, completeOrder, cancelOrder } from '@/api/order'
+import { getDispatchOrders, completeOrder, cancelDriverOrder } from '@/api/order'
 
 const orderList = ref([])
 const loading = ref(false)
@@ -152,7 +152,7 @@ async function handleCancelOrder() {
   } catch { return }
   cancelLoading.value = true
   try {
-    await cancelOrder(cancelForm.value.orderId, cancelForm.value)
+    await cancelDriverOrder(cancelForm.value.orderId, cancelForm.value)
     ElMessage.success('订单已取消')
     cancelDialogVisible.value = false
     await fetchOrders()

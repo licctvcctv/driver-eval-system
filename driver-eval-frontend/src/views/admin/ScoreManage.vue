@@ -59,7 +59,7 @@
     <el-dialog v-model="detailVisible" title="评分详情" width="650px">
       <div v-if="detailData">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="司机姓名">{{ detailData.user?.name || detailData.user?.username || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="司机姓名">{{ detailData.user?.realName || detailData.user?.username || '-' }}</el-descriptions-item>
           <el-descriptions-item label="当前评分">{{ detailData.driverInfo?.score }}</el-descriptions-item>
           <el-descriptions-item label="等级">{{ levelLabel(detailData.driverInfo?.level) }}</el-descriptions-item>
           <el-descriptions-item label="总订单数">{{ detailData.driverInfo?.totalOrders }}</el-descriptions-item>

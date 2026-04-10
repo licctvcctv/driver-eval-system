@@ -6,9 +6,9 @@
       <el-col :span="6">
         <el-select v-model="query.status" placeholder="状态筛选" clearable @change="loadData">
           <el-option label="全部" value="" />
-          <el-option label="待审核" value="待审核" />
-          <el-option label="已通过" value="已通过" />
-          <el-option label="已驳回" value="已驳回" />
+          <el-option label="待审核" :value="0" />
+          <el-option label="已通过" :value="1" />
+          <el-option label="已驳回" :value="2" />
         </el-select>
       </el-col>
       <el-col :span="4">
@@ -22,7 +22,7 @@
       <el-table-column prop="appealContent" label="申诉内容" show-overflow-tooltip />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="appealStatusType(row.status)">{{ row.status }}</el-tag>
+          <el-tag :type="appealStatusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="adminRemark" label="管理员备注" show-overflow-tooltip />
@@ -30,7 +30,7 @@
       <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">
           <el-button
-            v-if="row.status === '待审核'"
+            v-if="row.status === 0"
             size="small"
             type="primary"
             @click="openReview(row)"
@@ -83,10 +83,17 @@ const reviewVisible = ref(false)
 const reviewForm = reactive({ appealId: null, status: 1, remark: '' })
 
 const appealStatusType = (s) => {
-  if (s === '待审核') return 'warning'
-  if (s === '已通过') return 'success'
-  if (s === '已驳回') return 'info'
+  if (s === 0) return 'warning'
+  if (s === 1) return 'success'
+  if (s === 2) return 'info'
   return ''
+}
+
+const statusLabel = (s) => {
+  if (s === 0) return '待审核'
+  if (s === 1) return '已通过'
+  if (s === 2) return '已驳回'
+  return '未知'
 }
 
 const loadData = async () => {

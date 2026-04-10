@@ -72,7 +72,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { Edit } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getMyVehicle, saveVehicle, getVehicleTypes } from '@/api/vehicle'
+import { getMyVehicle, saveVehicle } from '@/api/vehicle'
+import { getCommonVehicleTypes } from '@/api/common'
 
 const vehicle = ref({})
 const vehicleTypes = ref([])
@@ -132,7 +133,7 @@ async function fetchVehicle() {
 
 async function fetchVehicleTypes() {
   try {
-    const res = await getVehicleTypes()
+    const res = await getCommonVehicleTypes()
     vehicleTypes.value = res.data || res || []
   } catch (e) {
     console.error(e)

@@ -5,8 +5,10 @@ import com.drivereval.common.Result;
 import com.drivereval.common.util.SensitiveWordUtil;
 import com.drivereval.entity.Announcement;
 import com.drivereval.entity.SensitiveWord;
+import com.drivereval.entity.EvalTag;
 import com.drivereval.entity.VehicleType;
 import com.drivereval.mapper.AnnouncementMapper;
+import com.drivereval.mapper.EvalTagMapper;
 import com.drivereval.mapper.SensitiveWordMapper;
 import com.drivereval.mapper.VehicleTypeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -31,6 +34,9 @@ public class CommonController extends BaseController {
 
     @Autowired
     private SensitiveWordMapper sensitiveWordMapper;
+
+    @Autowired
+    private EvalTagMapper evalTagMapper;
 
     @PostMapping("/upload")
     public Result<?> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
@@ -86,6 +92,13 @@ public class CommonController extends BaseController {
     public Result<?> vehicleTypes(HttpServletRequest request) {
         return Result.success(vehicleTypeMapper.selectList(
                 new QueryWrapper<VehicleType>().orderByAsc("id")));
+    }
+
+    @GetMapping("/tags")
+    public Result<?> getTagList() {
+        List<EvalTag> tags = evalTagMapper.selectList(
+            new QueryWrapper<EvalTag>().eq("is_deleted", 0).orderByAsc("sort_order"));
+        return Result.success(tags);
     }
 
     @PostMapping("/check-sensitive")
