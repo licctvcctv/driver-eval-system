@@ -21,6 +21,9 @@ export function getDriverCompletedOrders(params) {
 export function getDriverCancelledOrders(params) {
   return request({ url: '/driver/order/cancelled', method: 'get', params })
 }
+export function acceptOrder(id) {
+  return request({ url: `/driver/order/accept/${id}`, method: 'post' })
+}
 export function completeOrder(id) {
   return request({ url: `/driver/order/complete/${id}`, method: 'post' })
 }

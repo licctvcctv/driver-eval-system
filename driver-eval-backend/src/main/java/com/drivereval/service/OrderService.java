@@ -16,6 +16,8 @@ public interface OrderService extends IService<OrderInfo> {
 
     void cancelByDriver(Long orderId, Long driverId, String reason);
 
+    void acceptOrder(Long orderId, Long driverId);
+
     void completeOrder(Long orderId, Long driverId);
 
     IPage<OrderInfo> getPassengerOrders(Long passengerId, Integer status, Page<OrderInfo> page);

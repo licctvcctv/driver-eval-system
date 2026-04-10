@@ -6,9 +6,9 @@
       <el-col :span="6">
         <el-select v-model="query.type" placeholder="类型筛选" clearable @change="loadData">
           <el-option label="全部" value="" />
-          <el-option label="公告" value="公告" />
-          <el-option label="新闻" value="新闻" />
-          <el-option label="通知" value="通知" />
+          <el-option label="公告" :value="1" />
+          <el-option label="新闻" :value="2" />
+          <el-option label="通知" :value="3" />
         </el-select>
       </el-col>
       <el-col :span="4">
@@ -22,12 +22,12 @@
       <el-table-column prop="title" label="标题" show-overflow-tooltip />
       <el-table-column prop="type" label="类型" width="100">
         <template #default="{ row }">
-          <el-tag>{{ row.type }}</el-tag>
+          <el-tag>{{ typeLabel(row.type) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.status === '发布' ? 'success' : 'info'">{{ row.status }}</el-tag>
+          <el-tag :type="row.status === 1 ? 'success' : 'info'">{{ statusLabel(row.status) }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="180" />
@@ -60,15 +60,15 @@
         </el-form-item>
         <el-form-item label="类型">
           <el-select v-model="form.type" placeholder="请选择类型">
-            <el-option label="公告" value="公告" />
-            <el-option label="新闻" value="新闻" />
-            <el-option label="通知" value="通知" />
+            <el-option label="公告" :value="1" />
+            <el-option label="新闻" :value="2" />
+            <el-option label="通知" :value="3" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="form.status" placeholder="请选择状态">
-            <el-option label="发布" value="发布" />
-            <el-option label="草稿" value="草稿" />
+            <el-option label="发布" :value="1" />
+            <el-option label="草稿" :value="0" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -90,7 +90,10 @@ const tableData = ref([])
 const total = ref(0)
 const query = reactive({ type: '', pageNum: 1, pageSize: 10 })
 const dialogVisible = ref(false)
-const form = reactive({ id: null, title: '', content: '', type: '公告', status: '草稿' })
+const form = reactive({ id: null, title: '', content: '', type: 1, status: 0 })
+
+const typeLabel = (t) => { if (t === 1) return '公告'; if (t === 2) return '新闻资讯'; if (t === 3) return '通知'; return t || '未知' }
+const statusLabel = (s) => { if (s === 1) return '发布'; if (s === 0) return '草稿'; return s || '未知' }
 
 const loadData = async () => {
   loading.value = true
@@ -110,7 +113,7 @@ const openDialog = (row) => {
   if (row) {
     Object.assign(form, { id: row.id, title: row.title, content: row.content, type: row.type, status: row.status })
   } else {
-    Object.assign(form, { id: null, title: '', content: '', type: '公告', status: '草稿' })
+    Object.assign(form, { id: null, title: '', content: '', type: 1, status: 0 })
   }
   dialogVisible.value = true
 }

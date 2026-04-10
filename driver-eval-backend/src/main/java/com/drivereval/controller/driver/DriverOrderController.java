@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.Map;
 
 @RestController
@@ -38,7 +39,8 @@ public class DriverOrderController extends BaseController {
         Long userId = getUserId(request);
 
         Page<Map<String, Object>> page = new Page<>(pageNum, pageSize);
-        return Result.success(orderInfoMapper.selectOrderWithDetails(page, null, userId, Constants.ORDER_DISPATCHED, null));
+        return Result.success(orderInfoMapper.selectOrderWithDetails(page, null, userId, null,
+                Arrays.asList(Constants.ORDER_DISPATCHED, Constants.ORDER_IN_PROGRESS)));
     }
 
     @GetMapping("/completed")
@@ -61,6 +63,17 @@ public class DriverOrderController extends BaseController {
 
         Page<Map<String, Object>> page = new Page<>(pageNum, pageSize);
         return Result.success(orderInfoMapper.selectOrderWithDetails(page, null, userId, Constants.ORDER_CANCELLED_DRIVER, null));
+    }
+
+    @PostMapping("/accept/{orderId}")
+    public Result<?> acceptOrder(@PathVariable Long orderId, HttpServletRequest request) {
+        Long userId = getUserId(request);
+        try {
+            orderService.acceptOrder(orderId, userId);
+            return Result.success("接单成功");
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PostMapping("/complete/{orderId}")

@@ -110,6 +110,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public void acceptOrder(Long orderId, Long driverId) {
+        OrderInfo order = orderInfoMapper.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+        if (!order.getDriverId().equals(driverId)) {
+            throw new BusinessException("无权操作此订单");
+        }
+        if (order.getStatus() != Constants.ORDER_DISPATCHED) {
+            throw new BusinessException("订单状态不允许接单");
+        }
+        // For demo: accept goes directly to IN_PROGRESS (skip ACCEPTED state)
+        order.setStatus(Constants.ORDER_IN_PROGRESS);
+        orderInfoMapper.updateById(order);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void completeOrder(Long orderId, Long driverId) {
         OrderInfo order = orderInfoMapper.selectById(orderId);
         if (order == null) {

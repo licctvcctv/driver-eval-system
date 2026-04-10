@@ -30,10 +30,18 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="170" />
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button
-              v-if="row.status === 1"
+              v-if="Number(row.status) === 1"
+              type="primary"
+              size="small"
+              @click="handleAccept(row)"
+            >
+              接单
+            </el-button>
+            <el-button
+              v-if="Number(row.status) === 3"
               type="success"
               size="small"
               @click="handleComplete(row)"
@@ -41,7 +49,7 @@
               完成
             </el-button>
             <el-button
-              v-if="row.status === 1"
+              v-if="Number(row.status) === 1 || Number(row.status) === 3"
               type="danger"
               size="small"
               @click="openCancelDialog(row)"
@@ -89,7 +97,7 @@
 import { ref, onMounted } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getDispatchOrders, completeOrder, cancelDriverOrder } from '@/api/order'
+import { getDispatchOrders, acceptOrder, completeOrder, cancelDriverOrder } from '@/api/order'
 
 const orderList = ref([])
 const loading = ref(false)
@@ -105,13 +113,13 @@ const cancelRules = {
 }
 
 function statusText(status) {
-  const map = { 0: '待派单', 1: '已派单', 2: '已完成', 3: '已取消' }
-  return map[status] || '未知'
+  const map = { 0: '待派单', 1: '已派单', 2: '已接单', 3: '进行中', 4: '已完成', 5: '乘客取消', 6: '司机取消' }
+  return map[Number(status)] || '未知'
 }
 
 function statusTagType(status) {
-  const map = { 0: 'info', 1: 'warning', 2: 'success', 3: 'danger' }
-  return map[status] || 'info'
+  const map = { 0: 'info', 1: 'warning', 2: '', 3: 'primary', 4: 'success', 5: 'danger', 6: 'danger' }
+  return map[Number(status)] || 'info'
 }
 
 async function fetchOrders() {
@@ -125,6 +133,19 @@ async function fetchOrders() {
     console.error(e)
   } finally {
     loading.value = false
+  }
+}
+
+async function handleAccept(row) {
+  try {
+    await ElMessageBox.confirm('确认接单？', '提示', { type: 'warning' })
+    await acceptOrder(row.id)
+    ElMessage.success('接单成功')
+    await fetchOrders()
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMessage.error(e.message || '操作失败')
+    }
   }
 }
 
