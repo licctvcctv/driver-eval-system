@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drivereval.mapper.EvaluationTagRelationMapper">
+
+    <select id="countPositiveByDriver" resultType="int">
+        SELECT COUNT(*) FROM evaluation_tag_relation etr
+        INNER JOIN eval_tag et ON etr.tag_id = et.id
+        WHERE etr.driver_id = #{driverId} AND et.tag_type = 1 AND et.is_deleted = 0
+    </select>
+
+    <select id="countAllByDriver" resultType="int">
+        SELECT COUNT(*) FROM evaluation_tag_relation etr
+        INNER JOIN eval_tag et ON etr.tag_id = et.id
+        WHERE etr.driver_id = #{driverId} AND et.is_deleted = 0
+    </select>
+
+</mapper>

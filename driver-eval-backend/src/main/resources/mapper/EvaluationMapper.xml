@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.drivereval.mapper.EvaluationMapper">
+
+    <select id="avgStarByDriverId" resultType="java.lang.Double">
+        SELECT AVG(star_rating) FROM evaluation WHERE driver_id = #{driverId}
+    </select>
+
+</mapper>

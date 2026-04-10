@@ -1,0 +1,26 @@
+# Reference projects
+ref-OnlineTaxi/
+ref-OnlineTaxi2/
+
+# Requirements doc
+需求文档.docx
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Backend
+driver-eval-backend/target/
+driver-eval-backend/uploads/
+driver-eval-backend/*.log
+
+# Frontend
+driver-eval-frontend/node_modules/
+driver-eval-frontend/dist/
+
+# OS
+.DS_Store
+
+# Claude
+.claude/

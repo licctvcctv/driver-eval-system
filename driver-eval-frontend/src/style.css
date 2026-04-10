@@ -1,0 +1,135 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+  background-color: #f5f7fa;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.page-container {
+  padding: 20px;
+}
+
+.page-container h2 {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* Layout styles */
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.layout-sidebar {
+  width: 220px;
+  background-color: #304156;
+  min-height: 100vh;
+  flex-shrink: 0;
+}
+
+.layout-sidebar .logo {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  background-color: #263445;
+  letter-spacing: 2px;
+}
+
+.layout-sidebar .el-menu {
+  border-right: none;
+}
+
+.layout-main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.layout-header {
+  height: 60px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+.layout-header .user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.layout-header .user-info span {
+  font-size: 14px;
+  color: #606266;
+}
+
+.layout-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* Login / Register pages */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.auth-card {
+  width: 420px;
+  padding: 40px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.auth-card h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #303133;
+  font-size: 24px;
+}
+
+.auth-card .el-form-item {
+  margin-bottom: 22px;
+}
+
+.auth-card .auth-btn {
+  width: 100%;
+}
+
+.auth-card .auth-footer {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.auth-card .auth-footer a {
+  color: #409eff;
+  text-decoration: none;
+  cursor: pointer;
+}
