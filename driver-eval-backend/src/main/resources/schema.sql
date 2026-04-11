@@ -6,6 +6,23 @@ SET NAMES utf8mb4;
 CREATE DATABASE IF NOT EXISTS driver_eval DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE driver_eval;
 
+-- 先删除旧表（按依赖顺序倒序删除）
+DROP TABLE IF EXISTS driver_score_log;
+DROP TABLE IF EXISTS driver_evaluation;
+DROP TABLE IF EXISTS evaluation_tag_relation;
+DROP TABLE IF EXISTS eval_tag;
+DROP TABLE IF EXISTS evaluation;
+DROP TABLE IF EXISTS appeal;
+DROP TABLE IF EXISTS complaint;
+DROP TABLE IF EXISTS driver_punish;
+DROP TABLE IF EXISTS order_info;
+DROP TABLE IF EXISTS vehicle_info;
+DROP TABLE IF EXISTS vehicle_type;
+DROP TABLE IF EXISTS driver_info;
+DROP TABLE IF EXISTS sensitive_word;
+DROP TABLE IF EXISTS announcement;
+DROP TABLE IF EXISTS sys_user;
+
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `announcement` (
