@@ -32,6 +32,23 @@
           {{ row.appealContent || row.content || '-' }}
         </template>
       </el-table-column>
+      <el-table-column label="申诉图片" width="120">
+        <template #default="{ row }">
+          <div v-if="parseImages(row.images).length" class="image-list">
+            <el-image
+              v-for="(img, idx) in parseImages(row.images)"
+              :key="idx"
+              :src="img"
+              :preview-src-list="parseImages(row.images)"
+              :initial-index="idx"
+              fit="cover"
+              class="thumb-image"
+              preview-teleported
+            />
+          </div>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
           <el-tag :type="appealStatusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
@@ -81,6 +98,19 @@
         >
           该司机当前处于处罚中，通过申诉将解除处罚
         </el-alert>
+        <div v-if="parseImages(currentRow.images).length" class="review-images">
+          <div class="review-images-title">申诉图片</div>
+          <el-image
+            v-for="(img, idx) in parseImages(currentRow.images)"
+            :key="idx"
+            :src="img"
+            :preview-src-list="parseImages(currentRow.images)"
+            :initial-index="idx"
+            fit="cover"
+            class="review-image"
+            preview-teleported
+          />
+        </div>
       </div>
       <el-form :model="reviewForm" label-width="80px">
         <el-form-item label="审核结果">
@@ -130,6 +160,12 @@ const statusLabel = (s) => {
   return s || '未知'
 }
 
+const parseImages = (images) => {
+  if (!images) return []
+  if (Array.isArray(images)) return images
+  return images.split(',').map(s => s.trim()).filter(Boolean)
+}
+
 const loadData = async () => {
   loading.value = true
   try {
@@ -166,4 +202,28 @@ onMounted(() => loadData())
 
 <style scoped>
 .page-container { padding: 20px; }
+.image-list {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.thumb-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+}
+.review-images {
+  margin-top: 12px;
+}
+.review-images-title {
+  margin-bottom: 8px;
+  color: #606266;
+  font-size: 13px;
+}
+.review-image {
+  width: 72px;
+  height: 72px;
+  margin-right: 8px;
+  border-radius: 4px;
+}
 </style>

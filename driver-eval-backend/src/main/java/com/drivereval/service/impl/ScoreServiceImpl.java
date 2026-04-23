@@ -53,6 +53,10 @@ public class ScoreServiceImpl implements ScoreService {
 
         // 不满5单，保持默认80分
         if (completedOrders < 5) {
+            if (driverInfo.getLevel() == null || driverInfo.getLevel() != Constants.LEVEL_NORMAL) {
+                driverInfo.setLevel(Constants.LEVEL_NORMAL);
+                driverInfoMapper.updateById(driverInfo);
+            }
             return;
         }
 

@@ -89,6 +89,7 @@ public class AdminAppealController extends BaseController {
             view.put("complaintContent", complaint != null ? complaint.getContent() : null);
             view.put("appealContent", item.getContent());
             view.put("content", item.getContent());
+            view.put("images", item.getImages());
             view.put("status", item.getStatus());
             view.put("adminRemark", item.getAdminRemark());
             view.put("reviewTime", item.getReviewTime());

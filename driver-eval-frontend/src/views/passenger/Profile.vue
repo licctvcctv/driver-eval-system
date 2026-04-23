@@ -40,6 +40,9 @@
         <el-form-item label="真实姓名" prop="realName">
           <el-input v-model="editForm.realName" placeholder="请输入真实姓名" />
         </el-form-item>
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="editForm.username" placeholder="请输入用户名" />
+        </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="editForm.phone" placeholder="请输入手机号" />
         </el-form-item>
@@ -58,6 +61,7 @@ import { ElMessage } from 'element-plus'
 import { Camera, Edit } from '@element-plus/icons-vue'
 import { getPassengerProfile, updatePassengerProfile } from '@/api/user'
 import { upload } from '@/api/common'
+import { getUserInfo, setUserInfo } from '@/utils/auth'
 
 const profile = ref({})
 const editDialogVisible = ref(false)
@@ -66,11 +70,16 @@ const editFormRef = ref(null)
 
 const editForm = ref({
   realName: '',
+  username: '',
   phone: ''
 })
 
 const editRules = {
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 30, message: '用户名长度必须在3-30个字符之间', trigger: 'blur' }
+  ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
@@ -88,9 +97,23 @@ async function fetchProfile() {
   try {
     const res = await getPassengerProfile()
     profile.value = res.data || res
+    syncStoredUserInfo()
   } catch (e) {
     console.error(e)
   }
+}
+
+function syncStoredUserInfo() {
+  const current = getUserInfo() || {}
+  setUserInfo({
+    ...current,
+    id: profile.value.id,
+    username: profile.value.username,
+    realName: profile.value.realName,
+    phone: profile.value.phone,
+    avatar: profile.value.avatar,
+    role: profile.value.role ?? current.role
+  })
 }
 
 async function handleAvatarUpload(options) {
@@ -109,6 +132,7 @@ async function handleAvatarUpload(options) {
 function openEditDialog() {
   editForm.value = {
     realName: profile.value.realName || '',
+    username: profile.value.username || '',
     phone: profile.value.phone || ''
   }
   editDialogVisible.value = true

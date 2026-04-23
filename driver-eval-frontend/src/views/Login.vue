@@ -114,7 +114,8 @@ async function handleLogin() {
       username: user.username,
       realName: user.realName,
       role: user.role || form.role,
-      phone: user.phone
+      phone: user.phone,
+      avatar: user.avatar
     })
     ElMessage.success('登录成功')
     const roleMap = { 1: 'PASSENGER', 2: 'DRIVER', 3: 'ADMIN' }

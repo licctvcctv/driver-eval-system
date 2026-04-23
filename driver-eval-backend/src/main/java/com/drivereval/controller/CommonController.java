@@ -1,6 +1,7 @@
 package com.drivereval.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.drivereval.common.Result;
 import com.drivereval.common.util.SensitiveWordUtil;
 import com.drivereval.entity.Announcement;
@@ -87,6 +88,8 @@ public class CommonController extends BaseController {
     @GetMapping("/announcements")
     public Result<?> announcements(
             @RequestParam(required = false) Integer type,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
             HttpServletRequest request) {
 
         QueryWrapper<Announcement> wrapper = new QueryWrapper<Announcement>()
@@ -97,7 +100,7 @@ public class CommonController extends BaseController {
             wrapper.eq("type", type);
         }
 
-        return Result.success(announcementMapper.selectList(wrapper));
+        return Result.success(announcementMapper.selectPage(new Page<>(pageNum, pageSize), wrapper));
     }
 
     @GetMapping("/vehicle-types")

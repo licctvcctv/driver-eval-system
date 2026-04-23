@@ -1,13 +1,18 @@
 package com.drivereval.controller.admin;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.drivereval.common.Constants;
 import com.drivereval.common.Result;
 import com.drivereval.entity.DriverInfo;
+import com.drivereval.entity.OrderInfo;
 import com.drivereval.entity.SysUser;
+import com.drivereval.entity.VehicleInfo;
 import com.drivereval.mapper.DriverInfoMapper;
+import com.drivereval.mapper.OrderInfoMapper;
 import com.drivereval.mapper.SysUserMapper;
+import com.drivereval.mapper.VehicleInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +29,12 @@ public class AdminUserController extends BaseController {
 
     @Autowired
     private DriverInfoMapper driverInfoMapper;
+
+    @Autowired
+    private OrderInfoMapper orderInfoMapper;
+
+    @Autowired
+    private VehicleInfoMapper vehicleInfoMapper;
 
     @GetMapping("/list")
     public Result<?> pageList(
@@ -160,8 +171,41 @@ public class AdminUserController extends BaseController {
         if (user.getRole() == Constants.ROLE_ADMIN) {
             return Result.error("不能删除管理员账号");
         }
+        if (hasLinkedOrders(id, user.getRole())) {
+            return Result.error("该用户存在关联订单，不能删除");
+        }
+        if (user.getRole() == Constants.ROLE_DRIVER && hasDriverLinks(id)) {
+            return Result.error("该司机存在关联司机信息或车辆信息，不能删除");
+        }
         sysUserMapper.deleteById(id);
         return Result.success("删除成功");
+    }
+
+    private boolean hasLinkedOrders(Long userId, Integer role) {
+        if (role == null || orderInfoMapper == null) {
+            return false;
+        }
+        LambdaQueryWrapper<OrderInfo> wrapper = new LambdaQueryWrapper<>();
+        if (role == Constants.ROLE_PASSENGER) {
+            wrapper.eq(OrderInfo::getPassengerId, userId);
+        } else if (role == Constants.ROLE_DRIVER) {
+            wrapper.eq(OrderInfo::getDriverId, userId);
+        } else {
+            return false;
+        }
+        Long count = orderInfoMapper.selectCount(wrapper);
+        return count != null && count > 0;
+    }
+
+    private boolean hasDriverLinks(Long userId) {
+        DriverInfo driverInfo = driverInfoMapper.selectOne(
+                new QueryWrapper<DriverInfo>().eq("user_id", userId));
+        if (driverInfo != null) {
+            return true;
+        }
+        Long vehicleCount = vehicleInfoMapper.selectCount(
+                new LambdaQueryWrapper<VehicleInfo>().eq(VehicleInfo::getDriverId, userId));
+        return vehicleCount != null && vehicleCount > 0;
     }
 
     private Integer parseRole(String role) {

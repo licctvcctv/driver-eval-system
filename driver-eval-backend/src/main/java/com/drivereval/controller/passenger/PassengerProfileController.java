@@ -1,5 +1,6 @@
 package com.drivereval.controller.passenger;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.drivereval.common.Result;
 import com.drivereval.entity.SysUser;
 import com.drivereval.mapper.SysUserMapper;
@@ -48,7 +49,20 @@ public class PassengerProfileController extends BaseController {
         String realName = params.get("realName");
         String phone = params.get("phone");
         String avatar = params.get("avatar");
+        String username = params.get("username");
 
+        if (username != null) {
+            String value = username.trim();
+            if (value.length() < 3 || value.length() > 30) {
+                return Result.error("用户名长度必须在3-30个字符之间");
+            }
+            SysUser existing = sysUserMapper.selectOne(
+                    new QueryWrapper<SysUser>().eq("username", value).ne("id", userId));
+            if (existing != null) {
+                return Result.error("用户名已存在");
+            }
+            user.setUsername(value);
+        }
         if (realName != null) {
             user.setRealName(realName);
         }
