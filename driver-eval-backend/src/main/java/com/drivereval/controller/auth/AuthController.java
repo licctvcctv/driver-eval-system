@@ -140,7 +140,7 @@ public class AuthController {
             DriverInfo driverInfo = new DriverInfo();
             driverInfo.setUserId(user.getId());
             driverInfo.setScore(new BigDecimal("80.00"));
-            driverInfo.setLevel(Constants.LEVEL_SILVER); // 80分对应银牌(>=75)
+            driverInfo.setLevel(Constants.LEVEL_SILVER);
             driverInfo.setTotalOrders(0);
             driverInfo.setTotalComplaints(0);
             driverInfo.setWeekComplaints(0);

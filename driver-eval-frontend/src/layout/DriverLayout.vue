@@ -17,19 +17,19 @@
           <el-icon><Van /></el-icon>
           <span>车辆管理</span>
         </el-menu-item>
-        <el-sub-menu index="driver-order">
-          <template #title>
-            <el-icon><Document /></el-icon>
-            <span>运营管理</span>
-            <el-badge v-if="pendingOrderCount > 0" :value="pendingOrderCount" :max="99" class="sidebar-badge" />
-          </template>
-          <el-menu-item index="/driver/order/dispatch">
-            <span>派单管理</span>
-            <el-badge v-if="pendingOrderCount > 0" :value="pendingOrderCount" :max="99" class="menu-item-badge" />
-          </el-menu-item>
-          <el-menu-item index="/driver/order/completed">完成订单</el-menu-item>
-          <el-menu-item index="/driver/order/cancelled">取消订单</el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="/driver/order/dispatch">
+          <el-icon><Document /></el-icon>
+          <span>派单管理</span>
+          <el-badge v-if="pendingOrderCount > 0" :value="pendingOrderCount" :max="99" class="menu-item-badge" />
+        </el-menu-item>
+        <el-menu-item index="/driver/order/completed">
+          <el-icon><CircleCheckFilled /></el-icon>
+          <span>完成订单</span>
+        </el-menu-item>
+        <el-menu-item index="/driver/order/cancelled">
+          <el-icon><CircleCloseFilled /></el-icon>
+          <span>取消订单</span>
+        </el-menu-item>
         <el-menu-item index="/driver/eval">
           <el-icon><Star /></el-icon>
           <span>乘客评价管理</span>
@@ -49,6 +49,10 @@
         <el-menu-item index="/driver/appeal">
           <el-icon><ChatDotSquare /></el-icon>
           <span>司机申诉管理</span>
+        </el-menu-item>
+        <el-menu-item index="/driver/notice">
+          <el-icon><Bell /></el-icon>
+          <span>通知公告</span>
         </el-menu-item>
       </el-menu>
     </div>

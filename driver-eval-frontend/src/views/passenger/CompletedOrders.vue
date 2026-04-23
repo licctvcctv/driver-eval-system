@@ -33,6 +33,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="completeTime" label="完成时间" width="170" />
+        <el-table-column label="司机评价" min-width="150" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span v-if="row.driverEvalContent">{{ row.driverEvalContent }}</span>
+            <span v-else style="color: #909399">暂无评价</span>
+          </template>
+        </el-table-column>
         <el-table-column label="已评价" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.isEvaluated ? 'success' : 'info'" size="small">

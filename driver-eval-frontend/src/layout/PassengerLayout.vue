@@ -13,6 +13,10 @@
           <el-icon><HomeFilled /></el-icon>
           <span>个人首页</span>
         </el-menu-item>
+        <el-menu-item index="/passenger/profile">
+          <el-icon><User /></el-icon>
+          <span>个人信息</span>
+        </el-menu-item>
         <el-menu-item index="/passenger/order/create">
           <el-icon><Plus /></el-icon>
           <span>立即下单</span>
@@ -36,6 +40,10 @@
         <el-menu-item index="/passenger/complaint">
           <el-icon><Warning /></el-icon>
           <span>投诉管理</span>
+        </el-menu-item>
+        <el-menu-item index="/passenger/notice">
+          <el-icon><Bell /></el-icon>
+          <span>通知公告</span>
         </el-menu-item>
       </el-menu>
     </div>

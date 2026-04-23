@@ -36,8 +36,9 @@ public class DriverAppealController extends BaseController {
         Long userId = getUserId(request);
         Long complaintId = Long.valueOf(params.get("complaintId").toString());
         String content = (String) params.get("content");
+        String images = params.get("images") != null ? params.get("images").toString() : null;
 
-        appealService.submitAppeal(complaintId, userId, content);
+        appealService.submitAppeal(complaintId, userId, content, images);
         return Result.success("申诉提交成功");
     }
 
@@ -64,6 +65,7 @@ public class DriverAppealController extends BaseController {
             view.put("driverId", item.getDriverId());
             view.put("content", item.getContent());
             view.put("appealContent", item.getContent());
+            view.put("images", item.getImages());
             view.put("status", item.getStatus());
             view.put("adminRemark", item.getAdminRemark());
             view.put("reviewTime", item.getReviewTime());

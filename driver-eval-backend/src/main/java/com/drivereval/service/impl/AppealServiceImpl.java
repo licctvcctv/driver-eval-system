@@ -52,7 +52,7 @@ public class AppealServiceImpl extends ServiceImpl<AppealMapper, Appeal> impleme
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submitAppeal(Long complaintId, Long driverId, String content) {
+    public void submitAppeal(Long complaintId, Long driverId, String content, String images) {
         Complaint complaint = complaintMapper.selectById(complaintId);
         if (complaint == null) {
             throw new BusinessException("投诉不存在");
@@ -81,6 +81,7 @@ public class AppealServiceImpl extends ServiceImpl<AppealMapper, Appeal> impleme
         appeal.setComplaintId(complaintId);
         appeal.setDriverId(driverId);
         appeal.setContent(content);
+        appeal.setImages(images);
         appeal.setStatus(Constants.STATUS_PENDING);
         appealMapper.insert(appeal);
     }

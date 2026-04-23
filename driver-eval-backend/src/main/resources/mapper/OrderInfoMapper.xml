@@ -42,6 +42,7 @@
         o.is_evaluated AS isEvaluated,
         o.is_complained AS isComplained,
         CASE WHEN de.id IS NULL THEN 0 ELSE 1 END AS driverEvaluated,
+        de.content AS driverEvalContent,
         o.create_time AS createTime,
         o.update_time AS updateTime,
         su_p.real_name AS passengerName,

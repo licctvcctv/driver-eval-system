@@ -18,6 +18,8 @@ public class Appeal {
 
     private String content;
 
+    private String images;
+
     private Integer status;
 
     private String adminRemark;

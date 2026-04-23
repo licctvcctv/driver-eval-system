@@ -35,7 +35,7 @@
         </template>
       </el-table-column>
       <el-table-column prop="createTime" label="创建时间" width="180" />
-      <el-table-column label="操作" width="120" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
           <el-button
             size="small"
@@ -44,6 +44,8 @@
           >
             {{ isNormal(row.status) ? '禁用' : '启用' }}
           </el-button>
+          <el-button size="small" type="primary" @click="openEditDialog(row)">编辑</el-button>
+          <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -58,18 +60,49 @@
       @current-change="loadData"
       @size-change="loadData"
     />
+
+    <!-- 编辑对话框 -->
+    <el-dialog v-model="editDialogVisible" title="编辑用户" width="450px" destroy-on-close>
+      <el-form :model="editForm" :rules="editRules" ref="editFormRef" label-width="80px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="editForm.username" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="真实姓名" prop="realName">
+          <el-input v-model="editForm.realName" placeholder="请输入真实姓名" />
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="editForm.phone" placeholder="请输入手机号" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleUpdateUser" :loading="editLoading">确认</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
-import { getUserList, toggleStatus } from '@/api/user'
-import { ElMessage } from 'element-plus'
+import { getUserList, toggleStatus, updateUser, deleteUser } from '@/api/user'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
 const query = reactive({ role: '', keyword: '', pageNum: 1, pageSize: 10 })
+
+const editDialogVisible = ref(false)
+const editLoading = ref(false)
+const editFormRef = ref(null)
+const editForm = ref({ id: null, username: '', realName: '', phone: '' })
+
+const editRules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  phone: [
+    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
+  ]
+}
 
 const roleLabel = (role) => {
   const value = Number(role)
@@ -120,6 +153,51 @@ const handleToggle = async (row) => {
     loadData()
   } catch (e) {
     ElMessage.error('操作失败')
+  }
+}
+
+function openEditDialog(row) {
+  editForm.value = {
+    id: row.id,
+    username: row.username || '',
+    realName: row.realName || '',
+    phone: row.phone || ''
+  }
+  editDialogVisible.value = true
+}
+
+async function handleUpdateUser() {
+  try {
+    await editFormRef.value.validate()
+  } catch { return }
+
+  editLoading.value = true
+  try {
+    await updateUser(editForm.value)
+    ElMessage.success('修改成功')
+    editDialogVisible.value = false
+    loadData()
+  } catch (e) {
+    ElMessage.error(e.message || '修改失败')
+  } finally {
+    editLoading.value = false
+  }
+}
+
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除用户「${row.realName || row.username}」吗？`,
+      '删除确认',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+    )
+    await deleteUser(row.id)
+    ElMessage.success('删除成功')
+    loadData()
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMessage.error(e.message || '删除失败')
+    }
   }
 }
 

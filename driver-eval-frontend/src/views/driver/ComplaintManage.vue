@@ -83,6 +83,21 @@
             show-word-limit
           />
         </el-form-item>
+        <el-form-item label="上传图片">
+          <el-upload
+            v-model:file-list="appealForm.fileList"
+            :http-request="handleAppealUpload"
+            list-type="picture-card"
+            :limit="3"
+            accept="image/*"
+            :on-exceed="handleAppealExceed"
+          >
+            <el-icon><Plus /></el-icon>
+            <template #tip>
+              <div class="el-upload__tip">最多上传3张图片</div>
+            </template>
+          </el-upload>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="appealDialogVisible = false">取消</el-button>
@@ -95,9 +110,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
 import { getDriverComplaints } from '@/api/complaint'
 import { submitAppeal } from '@/api/appeal'
-import { checkSensitive } from '@/api/common'
+import { checkSensitive, upload } from '@/api/common'
 
 const complaintList = ref([])
 const loading = ref(false)
@@ -107,7 +123,7 @@ const queryParams = ref({ page: 1, size: 10 })
 const appealDialogVisible = ref(false)
 const appealLoading = ref(false)
 const appealFormRef = ref(null)
-const appealForm = ref({ complaintId: null, content: '' })
+const appealForm = ref({ complaintId: null, content: '', fileList: [], uploadedUrls: [] })
 const appealRules = {
   content: [{ required: true, message: '请输入申诉内容', trigger: 'blur' }]
 }
@@ -155,8 +171,24 @@ async function fetchComplaints() {
 }
 
 function openAppealDialog(row) {
-  appealForm.value = { complaintId: row.id, content: '' }
+  appealForm.value = { complaintId: row.id, content: '', fileList: [], uploadedUrls: [] }
   appealDialogVisible.value = true
+}
+
+async function handleAppealUpload(options) {
+  try {
+    const res = await upload(options.file)
+    const url = res.data?.url || res.data || res.url
+    appealForm.value.uploadedUrls.push(url)
+    options.onSuccess(res)
+  } catch (e) {
+    options.onError(e)
+    ElMessage.error('图片上传失败')
+  }
+}
+
+function handleAppealExceed() {
+  ElMessage.warning('最多上传3张图片')
 }
 
 async function handleSubmitAppeal() {
@@ -175,7 +207,11 @@ async function handleSubmitAppeal() {
       return
     }
 
-    await submitAppeal(appealForm.value)
+    await submitAppeal({
+      complaintId: appealForm.value.complaintId,
+      content: appealForm.value.content,
+      images: appealForm.value.uploadedUrls.join(',')
+    })
     ElMessage.success('申诉提交成功')
     appealDialogVisible.value = false
     await fetchComplaints()

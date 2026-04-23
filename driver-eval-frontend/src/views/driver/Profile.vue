@@ -42,6 +42,10 @@
               {{ levelText }}
             </el-tag>
           </div>
+          <div v-if="profile.avgStar" class="star-section">
+            <span class="star-label">乘客评分：</span>
+            <el-rate :model-value="profile.avgStar" disabled show-score text-color="#ff9900" />
+          </div>
           <el-descriptions :column="2" border style="margin-top: 16px">
             <el-descriptions-item label="总订单数">{{ profile.totalOrders ?? 0 }}</el-descriptions-item>
             <el-descriptions-item label="总投诉数">{{ profile.totalComplaints ?? 0 }}</el-descriptions-item>
@@ -338,6 +342,17 @@ onUnmounted(() => {
 .level-badge {
   font-size: 16px;
   padding: 8px 16px;
+}
+.star-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  font-size: 14px;
+}
+.star-label {
+  color: #606266;
+  margin-right: 4px;
 }
 .status-section {
   display: flex;

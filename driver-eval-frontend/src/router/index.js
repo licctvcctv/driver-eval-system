@@ -18,12 +18,14 @@ const routes = [
     meta: { requiresAuth: true, role: 'PASSENGER' },
     children: [
       { path: 'home', name: 'PassengerHome', component: () => import('../views/passenger/Home.vue') },
+      { path: 'profile', name: 'PassengerProfile', component: () => import('../views/passenger/Profile.vue') },
       { path: 'order/create', name: 'CreateOrder', component: () => import('../views/passenger/CreateOrder.vue') },
       { path: 'order/list', name: 'PassengerOrderList', component: () => import('../views/passenger/OrderList.vue') },
       { path: 'order/completed', name: 'PassengerCompletedOrders', component: () => import('../views/passenger/CompletedOrders.vue') },
       { path: 'order/cancelled', name: 'PassengerCancelledOrders', component: () => import('../views/passenger/CancelledOrders.vue') },
       { path: 'eval', name: 'PassengerEval', component: () => import('../views/passenger/EvalManage.vue') },
-      { path: 'complaint', name: 'PassengerComplaint', component: () => import('../views/passenger/ComplaintManage.vue') }
+      { path: 'complaint', name: 'PassengerComplaint', component: () => import('../views/passenger/ComplaintManage.vue') },
+      { path: 'notice', name: 'PassengerNotice', component: () => import('../views/passenger/NoticeManage.vue') }
     ]
   },
   {
@@ -40,7 +42,8 @@ const routes = [
       { path: 'tag-stats', name: 'DriverTagStats', component: () => import('../views/driver/TagStats.vue') },
       { path: 'star-chart', name: 'DriverStarChart', component: () => import('../views/driver/StarChart.vue') },
       { path: 'complaint', name: 'DriverComplaint', component: () => import('../views/driver/ComplaintManage.vue') },
-      { path: 'appeal', name: 'DriverAppeal', component: () => import('../views/driver/AppealManage.vue') }
+      { path: 'appeal', name: 'DriverAppeal', component: () => import('../views/driver/AppealManage.vue') },
+      { path: 'notice', name: 'DriverNotice', component: () => import('../views/driver/NoticeManage.vue') }
     ]
   },
   {

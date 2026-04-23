@@ -7,7 +7,7 @@ import com.drivereval.entity.Appeal;
 
 public interface AppealService extends IService<Appeal> {
 
-    void submitAppeal(Long complaintId, Long driverId, String content);
+    void submitAppeal(Long complaintId, Long driverId, String content, String images);
 
     void reviewAppeal(Long appealId, Long adminId, Integer status, String remark);
 

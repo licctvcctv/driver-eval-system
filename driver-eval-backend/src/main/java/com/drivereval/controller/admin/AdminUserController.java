@@ -114,6 +114,56 @@ public class AdminUserController extends BaseController {
         return Result.success("操作成功");
     }
 
+    @PostMapping("/update")
+    public Result<?> updateUser(@RequestBody Map<String, Object> params, HttpServletRequest request) {
+        Object userIdObj = params.get("id");
+        if (userIdObj == null) {
+            return Result.error("用户ID不能为空");
+        }
+        Long userId = Long.valueOf(userIdObj.toString());
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+
+        String username = params.get("username") != null ? params.get("username").toString() : null;
+        String realName = params.get("realName") != null ? params.get("realName").toString() : null;
+        String phone = params.get("phone") != null ? params.get("phone").toString() : null;
+
+        if (username != null && !username.isEmpty()) {
+            // 检查用户名唯一性（排除自身）
+            SysUser existing = sysUserMapper.selectOne(
+                    new QueryWrapper<SysUser>().eq("username", username).ne("id", userId));
+            if (existing != null) {
+                return Result.error("用户名已存在");
+            }
+            user.setUsername(username);
+        }
+        if (realName != null) {
+            user.setRealName(realName);
+        }
+        if (phone != null) {
+            user.setPhone(phone);
+        }
+
+        sysUserMapper.updateById(user);
+        return Result.success("更新成功");
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<?> deleteUser(@PathVariable Long id, HttpServletRequest request) {
+        SysUser user = sysUserMapper.selectById(id);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+        // 不允许删除管理员
+        if (user.getRole() == Constants.ROLE_ADMIN) {
+            return Result.error("不能删除管理员账号");
+        }
+        sysUserMapper.deleteById(id);
+        return Result.success("删除成功");
+    }
+
     private Integer parseRole(String role) {
         if (role == null || role.trim().isEmpty()) {
             return null;

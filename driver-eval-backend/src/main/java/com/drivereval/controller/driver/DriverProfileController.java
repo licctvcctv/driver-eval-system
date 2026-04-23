@@ -7,6 +7,7 @@ import com.drivereval.entity.DriverInfo;
 import com.drivereval.entity.SysUser;
 import com.drivereval.entity.VehicleInfo;
 import com.drivereval.mapper.DriverInfoMapper;
+import com.drivereval.mapper.EvaluationMapper;
 import com.drivereval.mapper.SysUserMapper;
 import com.drivereval.mapper.VehicleInfoMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,9 @@ public class DriverProfileController extends BaseController {
 
     @Autowired
     private VehicleInfoMapper vehicleInfoMapper;
+
+    @Autowired
+    private EvaluationMapper evaluationMapper;
 
     @GetMapping("/info")
     public Result<?> getProfile(HttpServletRequest request) {
@@ -61,6 +65,10 @@ public class DriverProfileController extends BaseController {
             data.put("latitude", driverInfo.getLatitude());
             data.put("longitude", driverInfo.getLongitude());
             data.put("punishEndTime", driverInfo.getPunishEndTime());
+
+            // 平均星级评分
+            Double avgStar = evaluationMapper.avgStarByDriverId(userId);
+            data.put("avgStar", avgStar != null ? BigDecimal.valueOf(avgStar).setScale(1, java.math.RoundingMode.HALF_UP) : null);
         }
 
         return Result.success(data);
