@@ -78,12 +78,16 @@ import { getDispatchOrders } from '@/api/order'
 
 const route = useRoute()
 const router = useRouter()
-const userInfo = getUserInfo()
+const userInfo = ref(getUserInfo())
 
 const activeMenu = computed(() => route.path)
 
 const pendingOrderCount = ref(0)
 let badgePollingTimer = null
+
+function refreshUserInfo(event) {
+  userInfo.value = event?.detail ?? getUserInfo()
+}
 
 async function fetchPendingCount() {
   try {
@@ -128,11 +132,13 @@ function handleVisibilityChange() {
 onMounted(() => {
   startBadgePolling()
   document.addEventListener('visibilitychange', handleVisibilityChange)
+  window.addEventListener('user-info-updated', refreshUserInfo)
 })
 
 onBeforeUnmount(() => {
   stopBadgePolling()
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  window.removeEventListener('user-info-updated', refreshUserInfo)
 })
 </script>
 

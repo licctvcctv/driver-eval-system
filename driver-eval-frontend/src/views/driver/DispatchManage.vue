@@ -158,7 +158,7 @@ function statusText(status) {
 }
 
 function statusTagType(status) {
-  const map = { 0: 'info', 1: 'warning', 2: '', 3: 'primary', 4: 'success', 5: 'danger', 6: 'danger' }
+  const map = { 0: 'info', 1: 'warning', 2: 'primary', 3: 'primary', 4: 'success', 5: 'danger', 6: 'danger' }
   return map[Number(status)] || 'info'
 }
 

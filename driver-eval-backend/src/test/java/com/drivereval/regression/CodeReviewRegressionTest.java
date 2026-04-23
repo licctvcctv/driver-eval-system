@@ -7,10 +7,12 @@ import com.drivereval.controller.CommonController;
 import com.drivereval.controller.admin.AdminAppealController;
 import com.drivereval.controller.admin.AdminUserController;
 import com.drivereval.controller.auth.AuthController;
+import com.drivereval.controller.driver.DriverEvalController;
 import com.drivereval.controller.passenger.PassengerProfileController;
 import com.drivereval.entity.Announcement;
 import com.drivereval.entity.Appeal;
 import com.drivereval.entity.DriverInfo;
+import com.drivereval.entity.Evaluation;
 import com.drivereval.entity.SysUser;
 import com.drivereval.mapper.AnnouncementMapper;
 import com.drivereval.mapper.AppealMapper;
@@ -31,8 +33,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -176,9 +181,39 @@ class CodeReviewRegressionTest {
         verify(sysUserMapper, never()).deleteById(4L);
     }
 
+    @Test
+    void driverStarStatsReturnsMonthlyAverageListForChart() {
+        EvaluationMapper evaluationMapper = mock(EvaluationMapper.class);
+        DriverEvalController controller = new DriverEvalController();
+        ReflectionTestUtils.setField(controller, "evaluationMapper", evaluationMapper);
+
+        Evaluation aprilFiveStar = evaluation(5, LocalDateTime.of(2026, 4, 1, 9, 0));
+        Evaluation aprilThreeStar = evaluation(3, LocalDateTime.of(2026, 4, 10, 9, 0));
+        Evaluation mayFourStar = evaluation(4, LocalDateTime.of(2026, 5, 1, 9, 0));
+        when(evaluationMapper.selectList(any())).thenReturn(Arrays.asList(aprilFiveStar, aprilThreeStar, mayFourStar));
+
+        @SuppressWarnings("unchecked")
+        Result<List<Map<String, Object>>> result =
+                (Result<List<Map<String, Object>>>) controller.getStarStats(requestForUser(4L));
+
+        assertEquals(200, result.getCode());
+        assertEquals(2, result.getData().size());
+        assertEquals("2026-04", result.getData().get(0).get("month"));
+        assertEquals(4.0, result.getData().get(0).get("avgStar"));
+        assertEquals(2, result.getData().get(0).get("count"));
+        assertEquals("2026-05", result.getData().get(1).get("month"));
+    }
+
     private MockHttpServletRequest requestForUser(Long userId) {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setAttribute("userId", userId);
         return request;
+    }
+
+    private Evaluation evaluation(Integer starRating, LocalDateTime createTime) {
+        Evaluation evaluation = new Evaluation();
+        evaluation.setStarRating(starRating);
+        evaluation.setCreateTime(createTime);
+        return evaluation;
     }
 }

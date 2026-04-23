@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.drivereval.controller.BaseController;
 import javax.servlet.http.HttpServletRequest;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -146,22 +147,26 @@ public class DriverEvalController extends BaseController {
         List<Evaluation> evaluations = evaluationMapper.selectList(
                 new QueryWrapper<Evaluation>().eq("driver_id", userId).orderByAsc("create_time"));
 
-        // 按星级分组统计
-        Map<Integer, Long> starCountMap = evaluations.stream()
-                .collect(Collectors.groupingBy(Evaluation::getStarRating, Collectors.counting()));
+        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        Map<String, List<Evaluation>> evaluationsByMonth = evaluations.stream()
+                .filter(eval -> eval.getCreateTime() != null && eval.getStarRating() != null)
+                .collect(Collectors.groupingBy(
+                        eval -> eval.getCreateTime().format(monthFormatter),
+                        TreeMap::new,
+                        Collectors.toList()));
 
-        // 构建折线图数据（按时间排列的星级趋势）
-        List<Map<String, Object>> trendData = new ArrayList<>();
-        for (Evaluation eval : evaluations) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map.Entry<String, List<Evaluation>> entry : evaluationsByMonth.entrySet()) {
+            double avgStar = entry.getValue().stream()
+                    .mapToInt(Evaluation::getStarRating)
+                    .average()
+                    .orElse(0);
             Map<String, Object> item = new HashMap<>();
-            item.put("date", eval.getCreateTime());
-            item.put("starRating", eval.getStarRating());
-            trendData.add(item);
+            item.put("month", entry.getKey());
+            item.put("avgStar", Math.round(avgStar * 100.0) / 100.0);
+            item.put("count", entry.getValue().size());
+            result.add(item);
         }
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("starCount", starCountMap);
-        result.put("trend", trendData);
 
         return Result.success(result);
     }

@@ -119,7 +119,7 @@ const scoreColor = (s) => {
 
 const levelType = (l) => {
   if (l === 3 || l === '金牌') return 'warning'
-  if (l === 2 || l === '银牌') return ''
+  if (l === 2 || l === '银牌') return 'primary'
   return 'info'
 }
 

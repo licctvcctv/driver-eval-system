@@ -69,19 +69,31 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getUserInfo, removeToken, removeUserInfo } from '../utils/auth'
 
 const route = useRoute()
 const router = useRouter()
-const userInfo = getUserInfo()
+const userInfo = ref(getUserInfo())
 
 const activeMenu = computed(() => route.path)
+
+function refreshUserInfo(event) {
+  userInfo.value = event?.detail ?? getUserInfo()
+}
 
 function handleLogout() {
   removeToken()
   removeUserInfo()
   router.push('/login')
 }
+
+onMounted(() => {
+  window.addEventListener('user-info-updated', refreshUserInfo)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('user-info-updated', refreshUserInfo)
+})
 </script>

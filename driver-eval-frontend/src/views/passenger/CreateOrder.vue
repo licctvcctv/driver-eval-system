@@ -360,7 +360,7 @@ const estimatedPrice = computed(() => {
 const getLevelTagType = (level) => {
   const value = Number(level)
   if (value === 3 || level === '金牌') return 'warning'
-  if (value === 2 || level === '银牌') return ''
+  if (value === 2 || level === '银牌') return 'primary'
   return 'info'
 }
 

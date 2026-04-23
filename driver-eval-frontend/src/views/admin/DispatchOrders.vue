@@ -56,11 +56,11 @@ const orderStatusType = (row) => {
   const status = row?.statusCode ?? row?.status
   const value = Number(status)
   if (value === 0 || status === '待接单') return 'warning'
-  if (value === 1 || status === '已接单') return ''
+  if (value === 1 || status === '已接单') return 'primary'
   if (value === 2 || value === 3 || status === '进行中') return 'primary'
   if (value === 4 || status === '已完成') return 'success'
   if (value === 5 || value === 6 || status === '乘客取消' || status === '司机取消' || status === '已取消') return 'info'
-  return ''
+  return 'info'
 }
 
 const loadData = async () => {

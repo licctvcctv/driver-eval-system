@@ -20,10 +20,12 @@ export function getUserInfo() {
 
 export function setUserInfo(info) {
   localStorage.setItem(USER_INFO_KEY, JSON.stringify(info))
+  window.dispatchEvent(new CustomEvent('user-info-updated', { detail: info }))
 }
 
 export function removeUserInfo() {
   localStorage.removeItem(USER_INFO_KEY)
+  window.dispatchEvent(new CustomEvent('user-info-updated', { detail: null }))
 }
 
 export function isLoggedIn() {

@@ -189,13 +189,13 @@ const statusText = (status) => {
 
 const statusTagType = (status) => {
   const s = Number(status)
-  const map = { 0: 'info', 1: 'warning', 2: '', 3: 'primary', 4: 'success', 5: 'danger', 6: 'danger' }
+  const map = { 0: 'info', 1: 'warning', 2: 'primary', 3: 'primary', 4: 'success', 5: 'danger', 6: 'danger' }
   return map[s] || 'info'
 }
 
 const levelTagType = (level) => {
   if (level === 3 || level === '金牌') return 'warning'
-  if (level === 2 || level === '银牌') return ''
+  if (level === 2 || level === '银牌') return 'primary'
   return 'info'
 }
 
