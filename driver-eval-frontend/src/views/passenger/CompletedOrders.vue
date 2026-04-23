@@ -198,7 +198,7 @@ const complaintForm = reactive({
 
 const levelTagType = (level) => {
   if (level === 3 || level === '金牌') return 'warning'
-  if (level === 2 || level === '银牌') return ''
+  if (level === 2 || level === '银牌') return 'primary'
   return 'info'
 }
 

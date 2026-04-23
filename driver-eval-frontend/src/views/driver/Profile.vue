@@ -173,10 +173,10 @@ const levelText = computed(() => {
 const levelTagType = computed(() => {
   const level = profile.value.level
   if (level === '金牌') return 'warning'
-  if (level === '银牌') return ''
+  if (level === '银牌') return 'primary'
   if (level === '普通') return 'info'
   if (level === 3) return 'warning'
-  if (level === 2) return ''
+  if (level === 2) return 'primary'
   return 'info'
 })
 
